@@ -49,7 +49,7 @@ const handleSubmit = async () => {
         <input v-model="kundenData.straße" type="text" placeholder="Straße" class="w-full px-4 py-2 border rounded" />
         <input v-model="kundenData.plz" type="text" placeholder="PLZ" class="w-full px-4 py-2 border rounded" @input="kundenData.plz = kundenData.plz.replace(/\D/g, '')" />
         <input v-model="kundenData.ort" type="text" placeholder="Ort" class="w-full px-4 py-2 border rounded" />
-        <input v-model="kundenData.telefonnummer" type="text" placeholder="Telefonnummer" class="w-full px-4 py-2 border rounded" @input="kundenData.telefonnummer = kundenData.telefonnummer.replace(/\s/g, '').replace('+', '0')" />
+        <input v-model="kundenData.telefonnummer" type="text" placeholder="Telefonnummer" class="w-full px-4 py-2 border rounded" />
         <input v-model="kundenData.email" type="email" placeholder="Email" class="w-full px-4 py-2 border rounded" />
         <input v-model="kundenData.ausweisnr" type="text" placeholder="Ausweisnummer" class="w-full px-4 py-2 border rounded" />
         <input v-model="kundenData.geburtsdatum" type="date" placeholder="Geburtsdatum" class="w-full px-4 py-2 border rounded" />
