@@ -16,6 +16,9 @@ const searchQuery = ref('');
 const showDropdown = ref(false);
 const imageFile = ref(null);
 const imagePreview = ref(null); // For image preview
+const showCamera = ref(false);
+const videoRef = ref(null);
+const canvasRef = ref(null);
 
 const fetchCustomers = async () => {
   try {
@@ -105,6 +108,33 @@ const handleSubmit = async () => {
     console.error('Error creating dog or uploading image:', error);
   }
 };
+
+const startCamera = async () => {
+  showCamera.value = true;
+  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+  videoRef.value.srcObject = stream;
+  videoRef.value.play();
+};
+
+const capturePhoto = () => {
+  const context = canvasRef.value.getContext('2d');
+  
+  // Set canvas dimensions to higher resolution
+  const width = 1280; // Desired width
+  const height = 720; // Desired height
+  canvasRef.value.width = width;
+  canvasRef.value.height = height;
+
+  context.drawImage(videoRef.value, 0, 0, width, height);
+  canvasRef.value.toBlob((blob) => {
+    const file = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
+    handleImageChange(file);
+    showCamera.value = false;
+    const stream = videoRef.value.srcObject;
+    const tracks = stream.getTracks();
+    tracks.forEach(track => track.stop());
+  });
+};
 </script>
 
 <template>
@@ -176,6 +206,22 @@ const handleSubmit = async () => {
           class="absolute top-7 right-0 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600">
           ×
         </button>
+        <button
+          @click="startCamera"
+          type="button"
+          class="mt-2 w-full px-4 py-2 text-white bg-green-500 rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500">
+          Take Photo
+        </button>
+        <div v-if="showCamera" class="mt-4">
+          <video ref="videoRef" class="w-full rounded"></video>
+          <button
+            @click="capturePhoto"
+            type="button"
+            class="mt-2 w-full px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            Capture Photo
+          </button>
+          <canvas ref="canvasRef" class="hidden"></canvas>
+        </div>
       </div>
       </div>
       <button type="submit" class="w-full px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
