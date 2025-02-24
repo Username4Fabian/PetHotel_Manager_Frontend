@@ -20,9 +20,13 @@ const imageFile = ref(null);
 
 const emits = defineEmits(['show-toast']);
 
-onMounted(async () => {
+const fetchInitialData = async () => {
   customers.value = await fetchCustomers();
   dogs.value = await fetchDogs();
+};
+
+onMounted(async () => {
+  await fetchInitialData();
 });
 
 const handleSubmit = async () => {

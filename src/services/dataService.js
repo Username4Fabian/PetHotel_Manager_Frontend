@@ -1,4 +1,3 @@
-// services/dataService.js
 import axios from 'axios';
 
 const fetchData = async (endpoint, cacheKey, fetchInterval) => {

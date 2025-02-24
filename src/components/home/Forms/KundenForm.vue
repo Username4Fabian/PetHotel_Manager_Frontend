@@ -24,8 +24,12 @@ const customers = ref([]);
 
 const emits = defineEmits(['show-toast']);
 
-onMounted(async () => {
+const fetchInitialData = async () => {
   customers.value = await fetchCustomers();
+};
+
+onMounted(async () => {
+  await fetchInitialData();
 });
 
 const handleSubmit = async () => {

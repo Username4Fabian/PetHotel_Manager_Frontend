@@ -18,9 +18,15 @@ const fetchInterval = 2 * 60 * 1000; // 2 minutes in milliseconds
 const showToast = ref(false);
 const toastMessage = ref('');
 
-const handleButtonClick = (type) => {
+const handleButtonClick = async (type) => {
   formType.value = type;
   showForm.value = true;
+
+  if (type === 'kunden') {
+    customers.value = await fetchCustomers();
+  } else if (type === 'hund') {
+    dogs.value = await fetchDogs();
+  }
 };
 
 const closeForm = () => {
@@ -51,11 +57,6 @@ const fetchAndCacheImage = async () => {
 
 onMounted(async () => {
   await fetchAndCacheImage();
-
-  setInterval(async () => {
-    customers.value = await fetchCustomers();
-    dogs.value = await fetchDogs();
-  }, fetchInterval);
 
   window.addEventListener('close-form', closeForm);
 });
