@@ -51,13 +51,6 @@ const fetchAndCacheImage = async () => {
 
 onMounted(async () => {
   await fetchAndCacheImage();
-  isFetchingCustomers.value = true;
-  customers.value = await fetchCustomers();
-  isFetchingCustomers.value = false;
-
-  isFetchingDogs.value = true;
-  dogs.value = await fetchDogs();
-  isFetchingDogs.value = false;
 
   setInterval(async () => {
     customers.value = await fetchCustomers();
