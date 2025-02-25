@@ -82,8 +82,8 @@ onMounted(async () => {
         </button>
       </div>
 
-      <div v-if="showForm" class="fixed inset-0 flex items-center justify-center bg-gray-800 z-50">
-        <div class="relative w-full max-w-lg p-4 bg-white rounded shadow-lg">
+      <div v-if="showForm" class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50">
+        <div class="relative w-full max-w-lg p-4 bg-white rounded shadow-lg max-h-full overflow-y-auto">
           <button @click="closeForm" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-4xl hover:cursor-pointer hover:scale-102">
             &times;
           </button>

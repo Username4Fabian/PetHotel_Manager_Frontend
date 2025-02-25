@@ -30,12 +30,30 @@ onMounted(() => {
 </script>
 
 <template>
-  <input
-    ref="timeInput"
-    :value="modelValue.replace(':00', '')"
-    type="text"
-    :placeholder="placeholder"
-    :required="required"
-    class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-  />
+  <div class="relative">
+    <input
+      ref="timeInput"
+      :value="modelValue.replace(':00', '')"
+      type="text"
+      :placeholder="placeholder"
+      :required="required"
+      class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+    <label class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 pointer-events-none">
+      Uhrzeit
+    </label>
+  </div>
 </template>
+
+<style scoped>
+/* Floating Label Animation */
+.relative input:focus + label,
+.relative input:not(:placeholder-shown) + label {
+  top: -0.5rem;
+  left: 0.75rem;
+  font-size: 0.75rem;
+  color: #3b82f6; /* Blue-500 */
+  background-color: white;
+  padding: 0 0.25rem;
+}
+</style>

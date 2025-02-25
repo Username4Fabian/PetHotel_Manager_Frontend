@@ -6,7 +6,7 @@ import DateInput from './HundForm/DateInput.vue';
 import TimeInput from './HundForm/TimeInput.vue';
 import DogSelection from './HundForm/DogSelection.vue';
 import AnmerkungInput from './HundForm/AnmerkungInput.vue';
-import BezahltToggle from './HundForm/BezhaltToggle.vue';
+import BezahltToggle from './HundForm/BezahltToggle.vue';
 import { fetchCustomers, fetchDogs } from '@/services/dataService';
 
 const appointmentData = ref({
@@ -122,39 +122,63 @@ const handleCustomerSelect = (customer) => {
 <template>
   <div class="p-4 bg-white rounded shadow-md">
     <form @submit.prevent="handleSubmit" class="space-y-4">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="col-span-1 md:col-span-2">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Ankunft</label>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <DateInput v-model="appointmentData.date_ankunft" placeholder="TT-MM-JJJJ" required />
-            <TimeInput v-model="appointmentData.time_ankunft" placeholder="HH:mm" required />
-          </div>
-        </div>
-        <div class="col-span-1 md:col-span-2">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Abfahrt</label>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <DateInput v-model="appointmentData.date_abfahrt" placeholder="TT-MM-JJJJ" />
-            <TimeInput v-model="appointmentData.time_abfahrt" placeholder="HH:mm" />
-          </div>
-        </div>
-        <div class="col-span-1 md:col-span-2">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Besitzer suchen</label>
-          <CustomerSearch :customers="customers" @selectCustomer="handleCustomerSelect" />
-        </div>
-        <div v-if="appointmentData.kundeId" class="col-span-1 md:col-span-2">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Hunde auswählen:</label>
-          <DogSelection :dogs="selectedCustomerDogs" :selectedDogIds="appointmentData.dogIds" @update:selectedDogIds="appointmentData.dogIds = $event" />
-        </div>
-        <div class="col-span-1 md:col-span-2">
-          <AnmerkungInput v-model="appointmentData.anmerkung" />
-        </div>
-        <div class="col-span-1 md:col-span-2">
-          <BezahltToggle v-model="appointmentData.bezahlt" />
+      <!-- Ankunft Section -->
+      <div>
+        <h3 class="text-lg font-semibold text-gray-700 mb-2">Ankunft</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <DateInput v-model="appointmentData.date_ankunft" placeholder="TT-MM-JJJJ" required />
+          <TimeInput v-model="appointmentData.time_ankunft" placeholder="HH:mm" required />
         </div>
       </div>
+
+      <!-- Abfahrt Section -->
+      <div>
+        <h3 class="text-lg font-semibold text-gray-700 mb-2">Abfahrt</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <DateInput v-model="appointmentData.date_abfahrt" placeholder="TT-MM-JJJJ" />
+          <TimeInput v-model="appointmentData.time_abfahrt" placeholder="HH:mm" />
+        </div>
+      </div>
+
+      <!-- Customer Search -->
+      <div class="mt-10">
+        <CustomerSearch :customers="customers" @selectCustomer="handleCustomerSelect" />
+      </div>
+
+      <!-- Dog Selection -->
+      <div v-if="appointmentData.kundeId">
+        <DogSelection :dogs="selectedCustomerDogs" :selectedDogIds="appointmentData.dogIds" @update:selectedDogIds="appointmentData.dogIds = $event" />
+      </div>
+
+      <!-- Anmerkung Section -->
+      <div class="mt-10">
+        <AnmerkungInput v-model="appointmentData.anmerkung" />
+      </div>
+
+      <!-- Bezahlt Toggle -->
+      <div>
+        <BezahltToggle v-model="appointmentData.bezahlt" />
+      </div>
+
+      <!-- Submit Button -->
       <button type="submit" class="w-full px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
         Speichern
       </button>
     </form>
   </div>
 </template>
+
+<style>
+/* Floating Label Animation */
+.relative input:focus + label,
+.relative input:not(:placeholder-shown) + label,
+.relative select:focus + label,
+.relative select:not(:placeholder-shown) + label {
+  top: -0.5rem;
+  left: 0.75rem;
+  font-size: 0.75rem;
+  color: #3b82f6; /* Blue-500 */
+  background-color: white;
+  padding: 0 0.25rem;
+}
+</style>

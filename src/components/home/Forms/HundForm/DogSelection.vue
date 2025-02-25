@@ -17,18 +17,21 @@ const toggleDogSelection = (dogId) => {
 </script>
 
 <template>
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-    <div
-      v-for="dog in dogs"
-      :key="dog.id"
-      @click="toggleDogSelection(dog.id)"
-      :class="{
-        'bg-blue-500 text-white': selectedDogIds.includes(dog.id),
-        'bg-gray-100 hover:bg-gray-200': !selectedDogIds.includes(dog.id)
-      }"
-      class="p-2 rounded cursor-pointer text-center"
-    >
-      {{ dog.name }}
+  <div>
+    <label class="block text-sm font-medium text-gray-500 mb-2">Hunde auswählen</label>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+      <div
+        v-for="dog in dogs"
+        :key="dog.id"
+        @click="toggleDogSelection(dog.id)"
+        :class="{
+          'bg-blue-500 text-white': selectedDogIds.includes(dog.id),
+          'bg-gray-100 hover:bg-gray-200': !selectedDogIds.includes(dog.id)
+        }"
+        class="p-2 rounded cursor-pointer text-center transition-all duration-200"
+      >
+        {{ dog.name }}
+      </div>
     </div>
   </div>
 </template>

@@ -108,22 +108,87 @@ const handleImageChange = (file) => {
 <template>
   <div class="p-4 bg-white rounded shadow-md">
     <form @submit.prevent="handleSubmit" class="space-y-4">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <input v-model="dogData.name" type="text" placeholder="Name" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" required />
-        <input v-model="dogData.rasse" type="text" placeholder="Rasse" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        <input v-model="dogData.passNr" type="text" placeholder="Impfpass Nummer" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        <input v-model="dogData.chipNr" type="text" placeholder="Chip Nummer" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        <select v-model="dogData.geschlecht" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <option value="" disabled>Geschlecht</option>
-          <option value="männlich">Männlich</option>
-          <option value="weiblich">Weiblich</option>
-        </select>
-        <CustomerSearch :customers="customers" @selectCustomer="(customer) => dogData.ownerId = customer.id"/>
+      <!-- Dog Information -->
+      <div>
+        <h3 class="text-lg font-semibold text-gray-700 mb-2">Hund Informationen</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="relative">
+            <input v-model="dogData.name" type="text" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+            <label class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 pointer-events-none">
+              Name
+            </label>
+          </div>
+          <div class="relative">
+            <input v-model="dogData.rasse" type="text" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <label class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 pointer-events-none">
+              Rasse
+            </label>
+          </div>
+          <div class="relative">
+            <input v-model="dogData.passNr" type="text" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <label class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 pointer-events-none">
+              Impfpass Nummer
+            </label>
+          </div>
+          <div class="relative">
+            <input v-model="dogData.chipNr" type="text" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <label class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 pointer-events-none">
+              Chip Nummer
+            </label>
+          </div>
+          <div class="relative">
+            <select v-model="dogData.geschlecht" class="w-full px-3 py-2 border rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="" disabled></option>
+              <option value="männlich">Männlich</option>
+              <option value="weiblich">Weiblich</option>
+            </select>
+            <label class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 pointer-events-none">
+              Geschlecht
+            </label>
+          </div>
+          <div class="relative">
+            <CustomerSearch :customers="customers" @selectCustomer="(customer) => dogData.ownerId = customer.id" />
+          </div>
+        </div>
       </div>
-      <ImageUpload @imageChange="handleImageChange" />
-      <button type="submit" class="w-full px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+
+      <!-- Image Upload -->
+      <div>
+        <h3 class="text-lg font-semibold text-gray-700 mb-2">Hunde Bild</h3>
+        <ImageUpload @imageChange="handleImageChange" />
+      </div>
+
+      <!-- Submit Button -->
+      <button type="submit" class="w-full px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
         Speichern
       </button>
     </form>
   </div>
 </template>
+
+<style>
+/* Floating Label Animation */
+.relative input:focus + label,
+.relative input:not(:placeholder-shown) + label,
+.relative select:focus + label,
+.relative select:not(:placeholder-shown) + label {
+  top: -0.5rem;
+  left: 0.75rem;
+  font-size: 0.75rem;
+  color: #3b82f6; /* Blue-500 */
+  background-color: white;
+  padding: 0 0.25rem;
+}
+
+/* Select Dropdown Styling */
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding-right: 1.5rem;
+  background-position: right 0.5rem center; 
+  background-repeat: no-repeat;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Cpath fill='%23999' d='M2 0L0 2h4zm0 5L0 3h4z'/%3E%3C/svg%3E"); 
+  background-size: 0.75rem;
+}
+</style>

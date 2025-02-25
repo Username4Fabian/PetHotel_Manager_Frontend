@@ -81,7 +81,6 @@ const capturePhoto = () => {
 
 <template>
     <div class="relative">
-      <label class="block text-sm font-medium text-gray-700 mb-1">Bild hochladen:</label>
       <div
         @drop="handleDrop"
         @dragover="handleDragOver"
