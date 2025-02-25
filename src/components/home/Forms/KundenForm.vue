@@ -2,7 +2,10 @@
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { fetchCustomers } from '@/services/dataService';
-import DateInput from './HundForm/DateInput.vue';
+import PersonalInfoForm from './KundenForm/PersonalInfoForm.vue';
+import AddressForm from './KundenForm/AddressForm.vue';
+import ContactInfoForm from './KundenForm/ContactInfoForm.vue';
+import AdditionalInfoForm from './KundenForm/AdditionalInfoForm.vue';
 import '@/assets/styles/forms.css';
 
 const kundenData = ref({
@@ -39,6 +42,11 @@ const handleSubmit = async () => {
     alert('Nachname is required');
     return;
   }
+
+  // Convert date format from dd-MM-yyyy to yyyy-MM-dd
+  const [day, month, year] = kundenData.value.geburtsdatum.split('-');
+  const formattedDate = `${year}-${month}-${day}`;
+  kundenData.value.geburtsdatum = formattedDate;
 
   // Optimistic UI Update
   const newCustomer = { ...kundenData.value };
@@ -78,139 +86,38 @@ const handleSubmit = async () => {
     localStorage.setItem('customers', JSON.stringify(revertedLocalStorage));
   }
 };
+
+const updateKundenData = (key, value) => {
+  kundenData.value[key] = value;
+};
 </script>
 
 <template>
   <div class="p-4 bg-white rounded shadow-md">
     <form @submit.prevent="handleSubmit" class="space-y-4">
       <!-- Personal Information -->
-      <div>
-        <h3 class="text-lg font-semibold text-gray-700 mb-2">Persönliche Informationen</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div class="relative">
-            <select v-model="kundenData.anrede" class="w-full px-3 py-2 border rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option value="Herr">Herr</option>
-              <option value="Frau">Frau</option>
-              <option value="Keine Angabe">Keine Angabe</option>
-            </select>
-            <label class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 pointer-events-none">
-              Anrede
-            </label>
-          </div>
-          <div class="relative">
-            <input v-model="kundenData.firstName" type="text" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            <label class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 pointer-events-none">
-              Vorname
-            </label>
-          </div>
-          <div class="relative">
-            <input v-model="kundenData.lastName" type="text" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" required />
-            <label class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 pointer-events-none">
-              Nachname
-            </label>
-          </div>
-          <div class="relative">
-            <DateInput v-model="kundenData.geburtsdatum" placeholder="TT-MM-JJJJ" label="Geburtsdatum"/>
-          </div>
-          <div class="relative">
-            <input v-model="kundenData.geburtsort" type="text" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            <label class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 pointer-events-none">
-              Geburtsort
-            </label>
-          </div>
-          <div class="relative">
-            <input v-model="kundenData.ausweisnr" type="text" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            <label class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 pointer-events-none">
-              Ausweisnummer
-            </label>
-          </div>
-        </div>
-      </div>
+      <PersonalInfoForm
+        :kundenData="kundenData"
+        @update:kundenData="updateKundenData"
+      />
 
       <!-- Address -->
-      <div>
-        <h3 class="text-lg font-semibold text-gray-700 mb-2">Adresse</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div class="relative">
-            <input v-model="kundenData.straße" type="text" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            <label class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 pointer-events-none">
-              Straße
-            </label>
-          </div>
-          <div class="relative">
-            <input v-model="kundenData.plz" type="text" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" @input="kundenData.plz = kundenData.plz.replace(/\D/g, '')" />
-            <label class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 pointer-events-none">
-              PLZ
-            </label>
-          </div>
-        </div>
-        <div class="relative mt-3">
-            <input v-model="kundenData.ort" type="text" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            <label class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 pointer-events-none">
-              Ort
-            </label>
-          </div>
-      </div>
+      <AddressForm
+        :kundenData="kundenData"
+        @update:kundenData="updateKundenData"
+      />
 
       <!-- Contact Information -->
-      <div>
-        <h3 class="text-lg font-semibold text-gray-700 mb-2">Kontaktinformationen</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div class="relative">
-            <input v-model="kundenData.telefonnummer" type="text" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            <label class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 pointer-events-none">
-              Telefonnummer
-            </label>
-          </div>
-          <div class="relative">
-            <input v-model="kundenData.email" type="email" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            <label class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 pointer-events-none">
-              Email
-            </label>
-          </div>
-        </div>
-      </div>
+      <ContactInfoForm
+        :kundenData="kundenData"
+        @update:kundenData="updateKundenData"
+      />
 
       <!-- Additional Information -->
-      <div>
-        <h3 class="text-lg font-semibold text-gray-700 mb-2">Zusätzliche Informationen</h3>
-        <div class="space-y-3">
-          <div class="relative">
-            <select v-model="kundenData.sprache" class="w-full px-3 py-2 border rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option value="Deutsch">Deutsch</option>
-              <option value="Englisch">Englisch</option>
-              <option value="Französisch">Französisch</option>
-              <option value="Spanisch">Spanisch</option>
-              <option value="Andere">Andere</option>
-            </select>
-            <label class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 pointer-events-none">
-              Sprache
-            </label>
-          </div>
-          <div class="flex items-center space-x-4">
-            <button
-              type="button"
-              @click="kundenData.agbsAkzeptiert = !kundenData.agbsAkzeptiert"
-              :class="{
-                'bg-blue-500 text-white': kundenData.agbsAkzeptiert,
-                'bg-gray-100 hover:bg-gray-200': !kundenData.agbsAkzeptiert
-              }"
-              class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-              AGBs akzeptiert
-            </button>
-            <button
-              type="button"
-              @click="kundenData.noMWST = !kundenData.noMWST"
-              :class="{
-                'bg-blue-500 text-white': kundenData.noMWST,
-                'bg-gray-100 hover:bg-gray-200': !kundenData.noMWST
-              }"
-              class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-              Keine MWST
-            </button>
-          </div>
-        </div>
-      </div>
+      <AdditionalInfoForm
+        :kundenData="kundenData"
+        @update:kundenData="updateKundenData"
+      />
 
       <!-- Submit Button -->
       <button type="submit" class="w-full px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">

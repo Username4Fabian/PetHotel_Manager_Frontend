@@ -1,12 +1,12 @@
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue';
 import axios from 'axios';
-import CustomerSearch from '../CustomerSearch.vue';
-import DateInput from './HundForm/DateInput.vue';
-import TimeInput from './HundForm/TimeInput.vue';
-import DogSelection from './HundForm/DogSelection.vue';
-import AnmerkungInput from './HundForm/AnmerkungInput.vue';
-import BezahltToggle from './HundForm/BezahltToggle.vue';
+import CustomerSearch from './HundForm/CustomerSearch.vue';
+import DateInput from './TerminForm/DateInput.vue';
+import TimeInput from './TerminForm/TimeInput.vue';
+import DogSelection from './TerminForm/DogSelection.vue';
+import AnmerkungInput from './TerminForm/AnmerkungInput.vue';
+import BezahltToggle from './TerminForm/BezahltToggle.vue';
 import { fetchCustomers, fetchDogs } from '@/services/dataService';
 import '@/assets/styles/forms.css';
 

@@ -1,8 +1,9 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
-import CustomerSearch from '../CustomerSearch.vue';
-import ImageUpload from '../ImageUpload.vue';
+import CustomerSearch from './HundForm/CustomerSearch.vue';
+import ImageUpload from './HundForm/ImageUpload.vue';
+import DogInfoForm from './HundForm/DogInfoForm.vue';
 import { fetchCustomers, fetchDogs } from '@/services/dataService';
 import '@/assets/styles/forms.css';
 
@@ -104,54 +105,21 @@ const handleSubmit = async () => {
 const handleImageChange = (file) => {
   imageFile.value = file;
 };
+
+const updateDogData = (key, value) => {
+  dogData.value[key] = value;
+};
 </script>
 
 <template>
   <div class="p-4 bg-white rounded shadow-md">
     <form @submit.prevent="handleSubmit" class="space-y-4">
       <!-- Dog Information -->
-      <div>
-        <h3 class="text-lg font-semibold text-gray-700 mb-2">Hund Informationen</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div class="relative">
-            <input v-model="dogData.name" type="text" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" required />
-            <label class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 pointer-events-none">
-              Name
-            </label>
-          </div>
-          <div class="relative">
-            <input v-model="dogData.rasse" type="text" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            <label class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 pointer-events-none">
-              Rasse
-            </label>
-          </div>
-          <div class="relative">
-            <input v-model="dogData.passNr" type="text" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            <label class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 pointer-events-none">
-              Impfpass Nummer
-            </label>
-          </div>
-          <div class="relative">
-            <input v-model="dogData.chipNr" type="text" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            <label class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 pointer-events-none">
-              Chip Nummer
-            </label>
-          </div>
-          <div class="relative">
-            <select v-model="dogData.geschlecht" class="w-full px-3 py-2 border rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option value="" disabled></option>
-              <option value="männlich">Männlich</option>
-              <option value="weiblich">Weiblich</option>
-            </select>
-            <label class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 pointer-events-none">
-              Geschlecht
-            </label>
-          </div>
-          <div class="relative">
-            <CustomerSearch :customers="customers" @selectCustomer="(customer) => dogData.ownerId = customer.id" />
-          </div>
-        </div>
-      </div>
+      <DogInfoForm
+        :dogData="dogData"
+        :customers="customers"
+        @update:dogData="updateDogData"
+      />
 
       <!-- Image Upload -->
       <div>
