@@ -21,8 +21,32 @@ const imageFile = ref(null);
 const emits = defineEmits(['show-toast']);
 
 const fetchInitialData = async () => {
-  customers.value = await fetchCustomers();
-  dogs.value = await fetchDogs();
+  const fetchInterval = 2 * 60 * 1000; // 2 minutes in milliseconds
+
+  const cachedCustomers = localStorage.getItem('customers');
+  const lastFetchTimeCustomers = localStorage.getItem('customers_lastFetchTime');
+  const now = Date.now();
+
+  if (cachedCustomers && lastFetchTimeCustomers && (now - lastFetchTimeCustomers < fetchInterval)) {
+    customers.value = JSON.parse(cachedCustomers);
+  } else {
+    const fetchedCustomers = await fetchCustomers();
+    customers.value = fetchedCustomers;
+    localStorage.setItem('customers', JSON.stringify(customers.value));
+    localStorage.setItem('customers_lastFetchTime', now.toString());
+  }
+
+  const cachedDogs = localStorage.getItem('dogs');
+  const lastFetchTimeDogs = localStorage.getItem('dogs_lastFetchTime');
+
+  if (cachedDogs && lastFetchTimeDogs && (now - lastFetchTimeDogs < fetchInterval)) {
+    dogs.value = JSON.parse(cachedDogs);
+  } else {
+    const fetchedDogs = await fetchDogs();
+    dogs.value = fetchedDogs;
+    localStorage.setItem('dogs', JSON.stringify(dogs.value));
+    localStorage.setItem('dogs_lastFetchTime', now.toString());
+  }
 };
 
 onMounted(async () => {
