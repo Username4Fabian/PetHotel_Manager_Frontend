@@ -1,109 +1,158 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import axios from 'axios';
 import CustomerSearch from '../CustomerSearch.vue';
+import DateInput from './HundForm/DateInput.vue';
+import TimeInput from './HundForm/TimeInput.vue';
+import DogSelection from './HundForm/DogSelection.vue';
+import AnmerkungInput from './HundForm/AnmerkungInput.vue';
+import BezahltToggle from './HundForm/BezhaltToggle.vue';
+import { fetchCustomers, fetchDogs } from '@/services/dataService';
 
-const terminData = ref({
+const appointmentData = ref({
   anmerkung: '',
-  ankunft: '',
-  abfahrt: '',
+  date_ankunft: '',
+  time_ankunft: '',
+  date_abfahrt: '',
+  time_abfahrt: '',
   bezahlt: false,
-  kunde: {
-    id: null
-  },
-  dogs: []
+  kundeId: null,
+  dogIds: [],
 });
 
-const allDogs = ref([]);
-const selectedDogs = ref([]);
 const customers = ref([]);
+const dogs = ref([]);
+const selectedCustomerDogs = ref([]);
 
+const emits = defineEmits(['show-toast']);
+
+// Fetch initial data (customers and dogs)
+const fetchInitialData = async () => {
+  const fetchInterval = 2 * 60 * 1000; // 2 minutes in milliseconds
+
+  const cachedCustomers = localStorage.getItem('customers');
+  const lastFetchTimeCustomers = localStorage.getItem('customers_lastFetchTime');
+  const cachedDogs = localStorage.getItem('dogs');
+  const lastFetchTimeDogs = localStorage.getItem('dogs_lastFetchTime');
+  const now = Date.now();
+
+  if (cachedCustomers && lastFetchTimeCustomers && (now - lastFetchTimeCustomers < fetchInterval)) {
+    customers.value = JSON.parse(cachedCustomers);
+  } else {
+    const fetchedCustomers = await fetchCustomers();
+    customers.value = fetchedCustomers;
+    localStorage.setItem('customers', JSON.stringify(customers.value));
+    localStorage.setItem('customers_lastFetchTime', now.toString());
+  }
+
+  if (cachedDogs && lastFetchTimeDogs && (now - lastFetchTimeDogs < fetchInterval)) {
+    dogs.value = JSON.parse(cachedDogs);
+  } else {
+    const fetchedDogs = await fetchDogs();
+    dogs.value = fetchedDogs;
+    localStorage.setItem('dogs', JSON.stringify(dogs.value));
+    localStorage.setItem('dogs_lastFetchTime', now.toString());
+  }
+};
+
+onMounted(async () => {
+  await fetchInitialData();
+
+  // Set default date to today in DD-MM-YYYY format
+  const today = new Date();
+  const day = String(today.getDate()).padStart(2, '0');
+  const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+  const year = today.getFullYear();
+  appointmentData.value.date_ankunft = `${day}-${month}-${year}`;
+  appointmentData.value.date_abfahrt = `${day}-${month}-${year}`;
+
+  // Set default time to 09:00 and 17:00
+  appointmentData.value.time_ankunft = '09:00:00';
+  appointmentData.value.time_abfahrt = '17:00:00';
+});
+
+// Watch for customer selection to filter dogs
+watch(() => appointmentData.value.kundeId, (newCustomerId) => {
+  if (newCustomerId) {
+    selectedCustomerDogs.value = dogs.value.filter(dog => dog.downer.id === newCustomerId);
+    // By default, select all dogs of the chosen customer
+    appointmentData.value.dogIds = selectedCustomerDogs.value.map(dog => dog.id);
+  } else {
+    selectedCustomerDogs.value = [];
+    appointmentData.value.dogIds = [];
+  }
+});
+
+// Handle form submission
 const handleSubmit = async () => {
-  if (!terminData.value.anmerkung) {
-    alert('Anmerkung is required');
-    return;
-  }
+  // Convert DD-MM-YYYY to YYYY-MM-DD for the backend
+  const [ankunftDay, ankunftMonth, ankunftYear] = appointmentData.value.date_ankunft.split('-');
+  const [abfahrtDay, abfahrtMonth, abfahrtYear] = appointmentData.value.date_abfahrt.split('-');
 
-  terminData.value.dogs = selectedDogs.value.map(dog => ({ id: dog.id }));
+  const formattedAppointmentData = {
+    ...appointmentData.value,
+    date_ankunft: `${ankunftYear}-${ankunftMonth}-${ankunftDay}`,
+    date_abfahrt: `${abfahrtYear}-${abfahrtMonth}-${abfahrtDay}`,
+  };
+
+  // Emit toast notification immediately
+  emits('show-toast', 'Termin erfolgreich erstellt!');
+
+  // Close the form overlay immediately
+  const closeFormEvent = new CustomEvent('close-form');
+  window.dispatchEvent(closeFormEvent);
 
   try {
-    const response = await axios.post('/api/appointment/createNewAppointment', terminData.value);
-    console.log('Termin created:', response.data);
+    const response = await axios.post('/api/appointment/createNewAppointment', formattedAppointmentData);
+    console.log('Appointment created:', response.data);
   } catch (error) {
-    console.error('Error creating Termin:', error);
+    console.error('Error creating appointment:', error);
+
+    // Emit an error toast notification
+    emits('show-toast', 'Fehler beim Erstellen des Termins!');
   }
 };
 
-const fetchDogs = async (customerId) => {
-  try {
-    console.log(`Fetching dogs for customer ID: ${customerId}`);
-    const response = await axios.get(`/api/dog/GetDogsByOwner`, {
-      params: { ownerId: customerId }
-    });
-    allDogs.value = response.data;
-    console.log('Dogs fetched:', allDogs.value);
-  } catch (error) {
-    console.error('Error fetching dogs:', error);
-  }
-};
-
-const fetchCustomers = async () => {
-  try {
-    const response = await axios.get('/api/kunde/GetAllKunden');
-    customers.value = response.data;
-    console.log('Customers fetched:', customers.value);
-  } catch (error) {
-    console.error('Error fetching customers:', error);
-  }
-};
-
+// Handle customer selection
 const handleCustomerSelect = (customer) => {
-  console.log('Customer selected:', customer);
-  terminData.value.kunde.id = customer.id;
-  fetchDogs(customer.id);
+  appointmentData.value.kundeId = customer.id;
 };
-
-const formatDateTime = (date) => {
-  if (!date) return '';
-  const d = new Date(date);
-  const pad = (n) => n.toString().padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-};
-
-const formattedAnkunft = computed({
-  get: () => formatDateTime(terminData.value.ankunft),
-  set: (value) => { terminData.value.ankunft = value; }
-});
-
-const formattedAbfahrt = computed({
-  get: () => formatDateTime(terminData.value.abfahrt),
-  set: (value) => { terminData.value.abfahrt = value; }
-});
-
-onMounted(() => {
-  fetchCustomers();
-});
 </script>
 
 <template>
   <div class="p-4 bg-white rounded shadow-md">
     <form @submit.prevent="handleSubmit" class="space-y-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <input v-model="terminData.anmerkung" type="text" placeholder="Anmerkung" class="w-full px-4 py-2 border rounded" required />
-        <input v-model="formattedAnkunft" type="datetime-local" placeholder="Ankunft" class="w-full px-4 py-2 border rounded" required />
-        <input v-model="formattedAbfahrt" type="datetime-local" placeholder="Abfahrt" class="w-full px-4 py-2 border rounded" required />
-        <CustomerSearch @selectCustomer="handleCustomerSelect" :customers="customers" />
-      </div>
-      <div v-if="allDogs.length" class="mt-4">
-        <h3 class="text-lg font-semibold">Select Dogs</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div v-for="dog in allDogs" :key="dog.id" class="flex items-center">
-            <input type="checkbox" :value="dog" v-model="selectedDogs" class="mr-2" />
-            <label>{{ dog.name }}</label>
+        <div class="col-span-1 md:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Ankunft</label>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <DateInput v-model="appointmentData.date_ankunft" placeholder="TT-MM-JJJJ" required />
+            <TimeInput v-model="appointmentData.time_ankunft" placeholder="HH:mm" required />
           </div>
         </div>
+        <div class="col-span-1 md:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Abfahrt</label>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <DateInput v-model="appointmentData.date_abfahrt" placeholder="TT-MM-JJJJ" />
+            <TimeInput v-model="appointmentData.time_abfahrt" placeholder="HH:mm" />
+          </div>
+        </div>
+        <div class="col-span-1 md:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Besitzer suchen</label>
+          <CustomerSearch :customers="customers" @selectCustomer="handleCustomerSelect" />
+        </div>
+        <div v-if="appointmentData.kundeId" class="col-span-1 md:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Hunde auswählen:</label>
+          <DogSelection :dogs="selectedCustomerDogs" :selectedDogIds="appointmentData.dogIds" @update:selectedDogIds="appointmentData.dogIds = $event" />
+        </div>
+        <div class="col-span-1 md:col-span-2">
+          <AnmerkungInput v-model="appointmentData.anmerkung" />
+        </div>
+        <div class="col-span-1 md:col-span-2">
+          <BezahltToggle v-model="appointmentData.bezahlt" />
+        </div>
       </div>
-      <button type="submit" class="w-full px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-700">
+      <button type="submit" class="w-full px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
         Speichern
       </button>
     </form>

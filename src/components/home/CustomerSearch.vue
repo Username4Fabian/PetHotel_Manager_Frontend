@@ -36,7 +36,7 @@
         class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
         required
       />
-      <ul v-if="showDropdown && filteredCustomers.length" class="absolute z-10 w-full bg-white border rounded shadow-md mt-1">
+      <ul v-if="showDropdown && filteredCustomers.length" class="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 max-h-40 overflow-y-auto">
         <li
           v-for="customer in filteredCustomers"
           :key="customer.id"
