@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue';
 import flatpickr from 'flatpickr';
 import { German } from 'flatpickr/dist/l10n/de';
 import 'flatpickr/dist/flatpickr.min.css';
+import '@/assets/styles/forms.css';
 
 const props = defineProps({
   modelValue: String,
@@ -44,16 +45,3 @@ onMounted(() => {
     </label>
   </div>
 </template>
-
-<style scoped>
-/* Floating Label Animation */
-.relative input:focus + label,
-.relative input:not(:placeholder-shown) + label {
-  top: -0.5rem;
-  left: 0.75rem;
-  font-size: 0.75rem;
-  color: #3b82f6; /* Blue-500 */
-  background-color: white;
-  padding: 0 0.25rem;
-}
-</style>

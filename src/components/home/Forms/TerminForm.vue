@@ -8,6 +8,7 @@ import DogSelection from './HundForm/DogSelection.vue';
 import AnmerkungInput from './HundForm/AnmerkungInput.vue';
 import BezahltToggle from './HundForm/BezahltToggle.vue';
 import { fetchCustomers, fetchDogs } from '@/services/dataService';
+import '@/assets/styles/forms.css';
 
 const appointmentData = ref({
   anmerkung: '',
@@ -162,18 +163,3 @@ const handleCustomerSelect = (customer) => {
     </form>
   </div>
 </template>
-
-<style>
-/* Floating Label Animation */
-.relative input:focus + label,
-.relative input:not(:placeholder-shown) + label,
-.relative select:focus + label,
-.relative select:not(:placeholder-shown) + label {
-  top: -0.5rem;
-  left: 0.75rem;
-  font-size: 0.75rem;
-  color: #3b82f6; /* Blue-500 */
-  background-color: white;
-  padding: 0 0.25rem;
-}
-</style>

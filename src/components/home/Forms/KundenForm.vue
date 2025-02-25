@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { fetchCustomers } from '@/services/dataService';
 import DateInput from './HundForm/DateInput.vue';
+import '@/assets/styles/forms.css';
 
 const kundenData = ref({
   anrede: 'Keine Angabe', // Default to "Keine Angabe"
@@ -218,30 +219,3 @@ const handleSubmit = async () => {
     </form>
   </div>
 </template>
-
-<style>
-/* Floating Label Animation */
-.relative input:focus + label,
-.relative input:not(:placeholder-shown) + label,
-.relative select:focus + label,
-.relative select:not(:placeholder-shown) + label {
-  top: -0.5rem;
-  left: 0.75rem;
-  font-size: 0.75rem;
-  color: #3b82f6; /* Blue-500 */
-  background-color: white;
-  padding: 0 0.25rem;
-}
-
-/* Select Dropdown Styling */
-select {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  padding-right: 1.5rem;
-  background-position: right 0.5rem center; 
-  background-repeat: no-repeat;
-  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Cpath fill='%23999' d='M2 0L0 2h4zm0 5L0 3h4z'/%3E%3C/svg%3E"); 
-  background-size: 0.75rem;
-}
-</style>

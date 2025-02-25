@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue';
+import '@/assets/styles/forms.css';
 
 const props = defineProps({
   customers: Array,
@@ -50,16 +51,3 @@ const selectCustomer = (customer) => {
     </ul>
   </div>
 </template>
-
-<style scoped>
-/* Floating Label Animation */
-.relative input:focus + label,
-.relative input:not(:placeholder-shown) + label {
-  top: -0.5rem;
-  left: 0.75rem;
-  font-size: 0.75rem;
-  color: #3b82f6; /* Blue-500 */
-  background-color: white;
-  padding: 0 0.25rem;
-}
-</style>
