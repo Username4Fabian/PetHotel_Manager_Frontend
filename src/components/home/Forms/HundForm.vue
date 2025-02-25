@@ -154,7 +154,7 @@ const handleImageChange = (file) => {
 
       <!-- Image Upload -->
       <div>
-        <h3 class="text-lg font-semibold text-gray-700 mb-2">Hunde Bild</h3>
+        <h3 class="text-lg font-semibold text-gray-700 mb-2">Hund Bild</h3>
         <ImageUpload @imageChange="handleImageChange" />
       </div>
 

@@ -123,25 +123,20 @@ const handleCustomerSelect = (customer) => {
   <div class="p-4 bg-white rounded shadow-md">
     <form @submit.prevent="handleSubmit" class="space-y-4">
       <!-- Ankunft Section -->
-      <div>
-        <h3 class="text-lg font-semibold text-gray-700 mb-2">Ankunft</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <DateInput v-model="appointmentData.date_ankunft" placeholder="TT-MM-JJJJ" required />
+          <DateInput v-model="appointmentData.date_ankunft" placeholder="TT-MM-JJJJ" label="Ankunfts-Datum" required />
           <TimeInput v-model="appointmentData.time_ankunft" placeholder="HH:mm" required />
         </div>
-      </div>
 
       <!-- Abfahrt Section -->
-      <div>
-        <h3 class="text-lg font-semibold text-gray-700 mb-2">Abfahrt</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <DateInput v-model="appointmentData.date_abfahrt" placeholder="TT-MM-JJJJ" />
+          <DateInput v-model="appointmentData.date_abfahrt" placeholder="TT-MM-JJJJ" label="Abfahrts-Datum"/>
           <TimeInput v-model="appointmentData.time_abfahrt" placeholder="HH:mm" />
         </div>
-      </div>
+
 
       <!-- Customer Search -->
-      <div class="mt-10">
+      <div>
         <CustomerSearch :customers="customers" @selectCustomer="handleCustomerSelect" />
       </div>
 
@@ -151,7 +146,7 @@ const handleCustomerSelect = (customer) => {
       </div>
 
       <!-- Anmerkung Section -->
-      <div class="mt-10">
+      <div>
         <AnmerkungInput v-model="appointmentData.anmerkung" />
       </div>
 
