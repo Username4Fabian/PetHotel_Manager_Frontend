@@ -66,7 +66,7 @@ watch(
 
 const handleSubmit = async () => {
   if (!kundenData.value.lastName) {
-    alert('Nachname is required');
+    alert('Nachname wird benötigt');
     return;
   }
 

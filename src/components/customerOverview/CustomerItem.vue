@@ -22,7 +22,7 @@ const toggleDetails = () => {
 };
 
 const deleteCustomer = async () => {
-  const confirmationMessage = `Sind Sie sicher, dass Sie den Kunden: ${props.customer.firstName} ${props.customer.lastName} löschen möchten?\n\nAlle dem Kunden angehörige Hunde werden ebenfalls gelöscht.\n\nDiese Aktion kann nicht rückgängig gemacht werden.`;
+  const confirmationMessage = `Sind Sie sicher, dass Sie den Kunden: ${props.customer.firstName} ${props.customer.lastName} löschen möchten?\n\nAlle dem Kunden angehörige Hunde und Termine werden ebenfalls gelöscht.\n\nDiese Aktion kann nicht rückgängig gemacht werden.`;
   if (window.confirm(confirmationMessage)) {
     try {
       await axios.delete(`/api/kunde/DeleteKunde/${props.customer.id}`);

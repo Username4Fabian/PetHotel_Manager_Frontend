@@ -17,7 +17,7 @@ const addCustomer = (newCustomer) => {
 };
 
 const handleUploadSuccess = () => {
-  emits('show-toast', 'Kunden erfolgreich hochgeladen!');
+  emits('show-toast', 'Kunden erfolgreich erstellt!');
   closeOverlay();
 };
 </script>
