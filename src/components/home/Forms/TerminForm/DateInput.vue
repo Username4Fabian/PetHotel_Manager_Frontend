@@ -19,7 +19,7 @@ const dateInput = ref(null);
 onMounted(() => {
   flatpickr(dateInput.value, {
     dateFormat: 'd-m-Y', // Day-Month-Year format
-    defaultDate: props.modelValue || 'today',
+    defaultDate: props.modelValue || new Date(), // Default to current date if not provided
     locale: German, // Set German localization
     onChange: (selectedDates, dateStr) => {
       emit('update:modelValue', dateStr);

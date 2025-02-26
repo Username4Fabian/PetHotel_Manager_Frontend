@@ -1,7 +1,7 @@
 <script setup>
 import DateInput from '../TerminForm/DateInput.vue';
 
-defineProps({
+const props = defineProps({
   kundenData: {
     type: Object,
     required: true,

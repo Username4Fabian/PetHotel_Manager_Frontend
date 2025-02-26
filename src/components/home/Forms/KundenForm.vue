@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import axios from 'axios';
 import { fetchCustomers } from '@/services/dataService';
 import PersonalInfoForm from './KundenForm/PersonalInfoForm.vue';
@@ -8,26 +8,37 @@ import ContactInfoForm from './KundenForm/ContactInfoForm.vue';
 import AdditionalInfoForm from './KundenForm/AdditionalInfoForm.vue';
 import '@/assets/styles/forms.css';
 
-const kundenData = ref({
-  anrede: 'Keine Angabe', // Default to "Keine Angabe"
-  firstName: '',
-  lastName: '',
-  straße: '',
-  plz: '',
-  ort: '',
-  telefonnummer: '',
-  email: '',
-  ausweisnr: '',
-  geburtsdatum: '',
-  geburtsort: '',
-  sprache: 'Deutsch',
-  agbsAkzeptiert: false,
-  noMWST: false
+const props = defineProps({
+  initialData: {
+    type: Object,
+    default: () => ({
+      anrede: 'Keine Angabe',
+      firstName: '',
+      lastName: '',
+      straße: '',
+      plz: '',
+      ort: '',
+      telefonnummer: '',
+      email: '',
+      ausweisnr: '',
+      geburtsdatum: '',
+      geburtsort: '',
+      sprache: 'Deutsch',
+      agbsAkzeptiert: false,
+      noMWST: false,
+    }),
+  },
+  isEdit: {
+    type: Boolean,
+    default: false,
+  },
 });
+
+const kundenData = ref({ ...props.initialData });
 
 const customers = ref([]);
 
-const emits = defineEmits(['show-toast']);
+const emits = defineEmits(['show-toast', 'addCustomer', 'updateCustomer', 'closeOverlay']);
 
 const fetchInitialData = async () => {
   customers.value = await fetchCustomers();
@@ -37,53 +48,80 @@ onMounted(async () => {
   await fetchInitialData();
 });
 
+watch(
+  () => props.initialData,
+  (newData) => {
+    kundenData.value = { ...newData };
+    // Ensure the date is in the correct format (dd-MM-yyyy)
+    if (kundenData.value.geburtsdatum) {
+      const date = new Date(kundenData.value.geburtsdatum);
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+      const year = date.getFullYear();
+      kundenData.value.geburtsdatum = `${day}-${month}-${year}`;
+    }
+  },
+  { immediate: true }
+);
+
 const handleSubmit = async () => {
   if (!kundenData.value.lastName) {
     alert('Nachname is required');
     return;
   }
 
-  // Convert date format from dd-MM-yyyy to yyyy-MM-dd
+  // Set default birthdate to current date if not provided
+  if (!kundenData.value.geburtsdatum) {
+    const today = new Date();
+    const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+    const year = today.getFullYear();
+    kundenData.value.geburtsdatum = `${day}-${month}-${year}`;
+  }
+
+  // Convert date format from dd-MM-yyyy to yyyy-MM-dd for the backend
   const [day, month, year] = kundenData.value.geburtsdatum.split('-');
   const formattedDate = `${year}-${month}-${day}`;
   kundenData.value.geburtsdatum = formattedDate;
 
   // Optimistic UI Update
-  const newCustomer = { ...kundenData.value };
-  customers.value.push(newCustomer);
-
-  // Emit toast notification immediately
-  emits('show-toast', 'Kunde erfolgreich erstellt!');
-
-  // Close the form overlay immediately
-  const closeFormEvent = new CustomEvent('close-form');
-  window.dispatchEvent(closeFormEvent);
+  let originalCustomer = null;
+  if (props.isEdit) {
+    originalCustomer = { ...kundenData.value };
+    const index = customers.value.findIndex(c => c.id === kundenData.value.id);
+    if (index !== -1) {
+      customers.value[index] = { ...kundenData.value };
+    }
+  } else {
+    const newCustomer = { ...kundenData.value, id: Date.now() }; // Temporary ID for optimistic update
+    customers.value.push(newCustomer);
+  }
 
   try {
-    const response = await axios.post('/api/kunde/CreateNewKunde', kundenData.value);
-    console.log('Kunde created:', response.data);
-
-    // Replace the optimistic update with the actual response data in the customers array
-    const updatedCustomers = customers.value.map(customer =>
-      customer.email === newCustomer.email ? response.data : customer
-    );
-    customers.value = updatedCustomers;
-
-    // Append the new customer to the existing list in local storage
+    const response = await axios.post('/api/kunde/UpdateKunde', kundenData.value);
+    if (props.isEdit) {
+      emits('updateCustomer', response.data);
+      emits('show-toast', 'Kunde erfolgreich aktualisiert!');
+    } else {
+      emits('addCustomer', response.data);
+      emits('show-toast', 'Kunde erfolgreich erstellt!');
+    }
+    // Update local storage
     const existingCustomers = JSON.parse(localStorage.getItem('customers')) || [];
     const updatedLocalStorage = [...existingCustomers, response.data]; // Append the new customer
     localStorage.setItem('customers', JSON.stringify(updatedLocalStorage));
+    emits('closeOverlay');
   } catch (error) {
-    console.error('Error creating Kunde:', error);
-
+    console.error('Error creating/updating Kunde:', error);
     // Revert optimistic UI update
-    const revertedCustomers = customers.value.filter(customer => customer.email !== newCustomer.email);
-    customers.value = revertedCustomers;
-
-    // Revert local storage to the previous state
-    const existingCustomers = JSON.parse(localStorage.getItem('customers')) || [];
-    const revertedLocalStorage = existingCustomers.filter(customer => customer.email !== newCustomer.email);
-    localStorage.setItem('customers', JSON.stringify(revertedLocalStorage));
+    if (props.isEdit && originalCustomer) {
+      const index = customers.value.findIndex(c => c.id === originalCustomer.id);
+      if (index !== -1) {
+        customers.value[index] = originalCustomer;
+      }
+    } else {
+      customers.value.pop();
+    }
   }
 };
 
@@ -121,7 +159,7 @@ const updateKundenData = (key, value) => {
 
       <!-- Submit Button -->
       <button type="submit" class="w-full px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
-        Speichern
+        {{ isEdit ? 'Aktualisieren' : 'Speichern' }}
       </button>
     </form>
   </div>

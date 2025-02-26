@@ -91,7 +91,7 @@ onMounted(async () => {
           <h2 class="text-xl font-bold mb-4">
             {{ formType === 'termin' ? 'Neuen Termin anlegen' : formType === 'hund' ? 'Neuen Hund anlegen' : 'Neuen Kunden anlegen' }}
           </h2>
-          <component :is="formType === 'termin' ? TerminForm : formType === 'hund' ? HundForm : KundenForm" @show-toast="handleSuccess" />
+          <component :is="formType === 'termin' ? TerminForm : formType === 'hund' ? HundForm : KundenForm" @show-toast="handleSuccess" @closeOverlay="closeForm" />
         </div>
       </div>
     </div>
