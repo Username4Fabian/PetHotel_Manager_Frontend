@@ -120,7 +120,7 @@ const updateKundenData = (key, value) => {
       />
 
       <!-- Submit Button -->
-      <button type="submit" class="w-full px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <button type="submit" class="w-full px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
         Speichern
       </button>
     </form>

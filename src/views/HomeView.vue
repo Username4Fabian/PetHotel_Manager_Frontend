@@ -8,7 +8,7 @@ import { fetchCustomers, fetchDogs } from '@/services/dataService';
 
 const showForm = ref(false);
 const formType = ref('');
-const backgroundImageUrl = ref('');
+const backgroundImageUrl = ref('https://tierhotelmanager.b-cdn.net/tierhotel-manager/Page_Images/MainBg-2.svg');
 const customers = ref([]);
 const dogs = ref([]);
 const isFetchingCustomers = ref(false);
@@ -43,15 +43,16 @@ const closeToast = () => {
 };
 
 const fetchAndCacheImage = async () => {
-  const imageUrl = 'https://tierhotelmanager.b-cdn.net/tierhotel-manager/Page_Images/MainBg-2.svg';
-  const cache = await caches.open('image-cache');
-  const cachedResponse = await cache.match(imageUrl);
-  if (cachedResponse) {
-    backgroundImageUrl.value = URL.createObjectURL(await cachedResponse.blob());
-  } else {
+  try {
+    const imageUrl = 'https://tierhotelmanager.b-cdn.net/tierhotel-manager/Page_Images/MainBg-2.svg';
     const response = await fetch(imageUrl);
-    await cache.put(imageUrl, response.clone());
-    backgroundImageUrl.value = URL.createObjectURL(await response.blob());
+    if (response.ok) {
+      backgroundImageUrl.value = imageUrl;
+    } else {
+      console.error('Failed to fetch background image:', response.statusText);
+    }
+  } catch (error) {
+    console.error('Error fetching background image:', error);
   }
 };
 
@@ -66,9 +67,9 @@ onMounted(async () => {
   <div class="relative flex flex-col items-center justify-center min-h-screen p-4 bg-cover bg-center" :style="{ backgroundImage: `url(${backgroundImageUrl})` }">
     <div class="absolute inset-0 bg-white bg-opacity-50 rounded-2xl w-11/12 md:w-11/20 h-5/6 md:h-5/9 m-auto"></div>
     <div class="relative z-10 flex flex-col items-center justify-center w-full h-full space-y-4 p-4 md:p-40">
-      <h1 class="text-4xl md:text-7xl text-center mb-4 md:mb-25 font-pacifico bg-gradient-to-r from-lime-900 to-emerald-700 bg-clip-text text-transparent drop-shadow-2xl">
+      <h1 class="text-5xl md:text-7xl text-center md:mt-0 -mt-30 mb-15 md:mb-25 font-pacifico bg-gradient-to-r from-lime-900 to-emerald-700 bg-clip-text text-transparent drop-shadow-2xl">
         Willkommen <br> 
-        <span class="text-2xl md:text-5xl">zum Tierhotel Manager</span>
+        <span class="text-3xl md:text-5xl">zum Tierhotel Manager</span>
       </h1>
       <div class="space-y-4 mb-4 w-full flex flex-col items-center">
         <button @click="handleButtonClick('termin')" class="w-full max-w-xs md:max-w-md lg:max-w-lg p-2 md:p-4 bg-blue-500 hover:bg-blue-600 text-white text-lg md:text-xl lg:text-2xl rounded hover:scale-102 hover:cursor-pointer">
