@@ -1,7 +1,6 @@
 <script setup>
 import { ref } from 'vue';
 import { defineProps, defineEmits } from 'vue';
-import axios from 'axios';
 import EditCustomerOverlay from './EditCustomerOverlay.vue';
 
 const props = defineProps({
@@ -21,15 +20,10 @@ const toggleDetails = () => {
   showDetails.value = !showDetails.value;
 };
 
-const deleteCustomer = async () => {
+const confirmDeleteCustomer = () => {
   const confirmationMessage = `Sind Sie sicher, dass Sie den Kunden: ${props.customer.firstName} ${props.customer.lastName} löschen möchten?\n\nAlle dem Kunden angehörige Hunde und Termine werden ebenfalls gelöscht.\n\nDiese Aktion kann nicht rückgängig gemacht werden.`;
   if (window.confirm(confirmationMessage)) {
-    try {
-      await axios.delete(`/api/kunde/DeleteKunde/${props.customer.id}`);
-      emits('customerDeleted', props.customer);
-    } catch (error) {
-      console.error('Fehler beim Löschen des Kunden:', error);
-    }
+    emits('customerDeleted', props.customer);
   }
 };
 
@@ -56,7 +50,7 @@ const handleUpdateCustomer = (updatedCustomer) => {
         </button>
         <button
           v-if="actionType === 'delete'"
-          @click.stop="deleteCustomer"
+          @click.stop="confirmDeleteCustomer"
           class="text-gray-500 hover:text-red-600 transition-colors duration-200 text-3xl hover:cursor-pointer mr-5">
           <i class="fas fa-trash-alt"></i>
         </button>

@@ -7,6 +7,7 @@ import AddCustomerOverlay from '@/components/customerOverview/AddCustomerOverlay
 import EditCustomerOverlay from '@/components/customerOverview/EditCustomerOverlay.vue';
 import Toast from '@/components/Toast.vue';
 import { fetchCustomers } from '@/services/dataService';
+import axios from 'axios';
 
 const customers = ref([]);
 const searchQuery = ref('');
@@ -45,7 +46,8 @@ const addCustomer = (newCustomer) => {
   showToast.value = true;
 };
 
-const handleCustomerDeleted = (deletedCustomer) => {
+const handleCustomerDeleted = async (deletedCustomer) => {
+  const originalCustomers = [...customers.value];
   customers.value = customers.value.filter(c => c.id !== deletedCustomer.id);
   localStorage.setItem('customers', JSON.stringify(customers.value));
   toastMessage.value = 'Kunde erfolgreich gelöscht!';
@@ -55,20 +57,35 @@ const handleCustomerDeleted = (deletedCustomer) => {
   if (currentPage.value > totalPages) {
     currentPage.value = totalPages;
   }
+
+  try {
+    await axios.delete(`/api/kunde/DeleteKunde/${deletedCustomer.id}`);
+  } catch (error) {
+    console.error('Fehler beim Löschen des Kunden:', error);
+    customers.value = originalCustomers;
+    localStorage.setItem('customers', JSON.stringify(customers.value));
+    toastMessage.value = 'Fehler beim Löschen des Kunden!';
+    showToast.value = true;
+  }
 };
 
-const handleUploadSuccess = () => {
-  fetchCustomersData();
-  toastMessage.value = 'Kunden erfolgreich hochgeladen!';
-  showToast.value = true;
-};
-
-const handleUpdateCustomer = (updatedCustomer) => {
+const handleUpdateCustomer = async (updatedCustomer) => {
+  const originalCustomers = [...customers.value];
   const index = customers.value.findIndex(c => c.id === updatedCustomer.id);
   if (index !== -1) {
     customers.value[index] = updatedCustomer;
     localStorage.setItem('customers', JSON.stringify(customers.value));
     toastMessage.value = 'Kunde erfolgreich aktualisiert!';
+    showToast.value = true;
+  }
+
+  try {
+    await axios.post('/api/kunde/UpdateKunde', updatedCustomer);
+  } catch (error) {
+    console.error('Fehler beim Aktualisieren des Kunden:', error);
+    customers.value = originalCustomers;
+    localStorage.setItem('customers', JSON.stringify(customers.value));
+    toastMessage.value = 'Fehler beim Aktualisieren des Kunden!';
     showToast.value = true;
   }
 };
@@ -133,32 +150,32 @@ const lastPage = () => {
 </script>
 
 <template>
-    <div class="container mx-auto p-4">
-      <h1 class="text-2xl md:text-4xl font-bold mb-4">Kundenübersicht</h1>
-      <CustomerSearchBar
-        v-model:searchQuery="searchQuery"
-        v-model:searchProperty="searchProperty"
-        :showAddButton="true"
-        @showOverlay="showOverlay = true"
-      />
-      <ul class="space-y-2">
-        <li v-for="customer in paginatedCustomers" :key="customer.id" class="mb-2">
-          <CustomerItem :customer="customer" actionType="delete" @customerDeleted="handleCustomerDeleted" @customerUpdated="handleUpdateCustomer" />
-        </li>
-      </ul>
-      <Pagination
-        :currentPage="currentPage"
-        :totalPages="totalPages"
-        @prevPage="prevPage"
-        @nextPage="nextPage"
-        @firstPage="firstPage"
-        @lastPage="lastPage"
-      />
-      <AddCustomerOverlay v-if="showOverlay" @closeOverlay="showOverlay = false" @addCustomer="addCustomer" @show-toast="handleUploadSuccess" />
-      <EditCustomerOverlay v-if="showEditOverlay" :customer="selectedCustomer" @closeOverlay="showEditOverlay = false" @updateCustomer="handleUpdateCustomer" @show-toast="handleUploadSuccess" />
-      <Toast v-if="showToast" :message="toastMessage" @close="closeToast" />
-    </div>
-  </template>
+  <div class="container mx-auto p-4">
+    <h1 class="text-2xl md:text-4xl font-bold mb-4">Kundenübersicht</h1>
+    <CustomerSearchBar
+      v-model:searchQuery="searchQuery"
+      v-model:searchProperty="searchProperty"
+      :showAddButton="true"
+      @showOverlay="showOverlay = true"
+    />
+    <ul class="space-y-2">
+      <li v-for="customer in paginatedCustomers" :key="customer.id" class="mb-2">
+        <CustomerItem :customer="customer" actionType="delete" @customerDeleted="handleCustomerDeleted" @customerUpdated="handleUpdateCustomer" />
+      </li>
+    </ul>
+    <Pagination
+      :currentPage="currentPage"
+      :totalPages="totalPages"
+      @prevPage="prevPage"
+      @nextPage="nextPage"
+      @firstPage="firstPage"
+      @lastPage="lastPage"
+    />
+    <AddCustomerOverlay v-if="showOverlay" @closeOverlay="showOverlay = false" @addCustomer="addCustomer" @show-toast="handleUploadSuccess" />
+    <EditCustomerOverlay v-if="showEditOverlay" :customer="selectedCustomer" @closeOverlay="showEditOverlay = false" @updateCustomer="handleUpdateCustomer" @show-toast="handleUploadSuccess" />
+    <Toast v-if="showToast" :message="toastMessage" @close="closeToast" />
+  </div>
+</template>
 
 <style scoped>
 .container {
