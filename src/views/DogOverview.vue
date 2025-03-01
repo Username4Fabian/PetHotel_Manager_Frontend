@@ -58,6 +58,7 @@ const fetchDogsData = async () => {
 };
 
 const addDog = (newDog) => {
+  // Optimistically add the new dog
   dogs.value.push(newDog);
   localStorage.setItem('dogs', JSON.stringify(dogs.value));
   toastMessage.value = 'Hund erfolgreich hinzugefügt!';
@@ -88,7 +89,7 @@ const handleDogDeleted = async (deletedDog) => {
 };
 
 const handleUpdateDog = (updatedDog) => {
-  console.log('Handling update in DogOverview:', updatedDog); // Debugging
+  // Optimistically update the dog
   const index = dogs.value.findIndex(d => d.id === updatedDog.id);
   if (index !== -1) {
     dogs.value = [
@@ -103,7 +104,6 @@ const handleUpdateDog = (updatedDog) => {
   showEditOverlay.value = false; // Close the overlay
 };
 
-// Handle the closeOverlay event from EditDogOverlay
 const handleCloseOverlay = () => {
   console.log('Overlay closed'); // Debugging
   showEditOverlay.value = false;
@@ -119,10 +119,8 @@ const closeToast = () => {
 };
 
 const editDog = (dog) => {
-  if (!showEditOverlay.value) {
-    selectedDog.value = dog;
-    showEditOverlay.value = true;
-  }
+  selectedDog.value = dog;
+  showEditOverlay.value = true; // Open the overlay
 };
 
 onMounted(() => {
@@ -203,12 +201,13 @@ const lastPage = () => {
       @lastPage="lastPage"
     />
     <AddDogOverlay v-if="showOverlay" @closeOverlay="showOverlay = false" @addDog="addDog" @show-toast="handleUploadSuccess" />
+    <EditDogOverlay v-if="showEditOverlay" :dog="selectedDog" @closeOverlay="showEditOverlay = false" @updateDog="handleUpdateDog" />
     <Toast v-if="showToast" :message="toastMessage" @close="closeToast" />
   </div>
 </template>
 
 <style scoped>
 .container {
-  max-width: 100%;
+  max-width: 1200px;
 }
 </style>

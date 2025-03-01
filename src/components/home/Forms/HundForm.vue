@@ -68,17 +68,21 @@ const handleSubmit = async () => {
     return;
   }
 
+  // Optimistically update the UI
+  if (props.isEdit) {
+    emits('updateDog', dogData.value); // Emit the updateDog event with the updated data
+  } else {
+    emits('addDog', dogData.value); // Emit the addDog event with the new data
+  }
+
   try {
     let response;
     if (props.isEdit) {
       response = await axios.post('/api/dog/UpdateDog', dogData.value);
-      console.log('Emitting updateDog:', response.data.dog); // Debugging
-      emits('updateDog', response.data.dog); // Emit the updateDog event with updated data
     } else {
       response = await axios.post('/api/dog/saveDog', dogData.value, {
         params: { ownerId: dogData.value.ownerId },
       });
-      emits('addDog', response.data.dog);
     }
 
     if (imageFile.value) {
@@ -93,6 +97,7 @@ const handleSubmit = async () => {
       });
     }
 
+    // Update local storage with the server response
     const dogs = JSON.parse(localStorage.getItem('dogs')) || [];
     if (props.isEdit) {
       const index = dogs.findIndex(d => d.id === response.data.dog.id);
@@ -108,6 +113,12 @@ const handleSubmit = async () => {
   } catch (error) {
     console.error('Error creating/updating dog or uploading image:', error);
     emits('show-toast', 'Fehler beim Erstellen/Aktualisieren des Hundes!');
+    // Revert the optimistic update in case of an error
+    if (props.isEdit) {
+      emits('updateDog', props.initialData); // Revert to the initial data
+    } else {
+      emits('addDog', null); // Remove the added dog
+    }
   }
 };
 
