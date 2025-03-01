@@ -13,10 +13,15 @@ const showDropdown = ref(false);
 
 const filteredCustomers = computed(() => {
   if (!searchQuery.value) return [];
-  return props.customers.filter(customer =>
-    customer.lastName.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-    customer.firstName.toLowerCase().includes(searchQuery.value.toLowerCase())
-  );
+  return props.customers.filter(customer => {
+    if (!customer || !customer.id || !customer.lastName) return false;
+    const searchValue = searchQuery.value.toLowerCase();
+    return (
+      customer.id.toString().includes(searchValue) ||
+      customer.lastName.toLowerCase().includes(searchValue) ||
+      (customer.firstName && customer.firstName.toLowerCase().includes(searchValue))
+    );
+  });
 });
 
 const selectCustomer = (customer) => {
@@ -44,9 +49,8 @@ const selectCustomer = (customer) => {
         v-for="customer in filteredCustomers"
         :key="customer.id"
         @click="selectCustomer(customer)"
-        class="px-4 py-2 cursor-pointer hover:bg-gray-200"
-      >
-        {{ customer.firstName }} {{ customer.lastName }}
+        class="px-4 py-2 cursor-pointer hover:bg-gray-200">
+        {{customer.id}} | {{ customer.firstName }} {{ customer.lastName }}
       </li>
     </ul>
   </div>
