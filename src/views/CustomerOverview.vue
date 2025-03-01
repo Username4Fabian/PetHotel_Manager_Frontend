@@ -6,10 +6,11 @@ import Pagination from '@/components/customerOverview/Pagination.vue';
 import AddCustomerOverlay from '@/components/customerOverview/AddCustomerOverlay.vue';
 import EditCustomerOverlay from '@/components/customerOverview/EditCustomerOverlay.vue';
 import Toast from '@/components/Toast.vue';
-import { fetchCustomers } from '@/services/dataService';
+import { fetchCustomers, fetchDogs } from '@/services/dataService';
 import axios from 'axios';
 
 const customers = ref([]);
+const dogs = ref([]);
 const searchQuery = ref('');
 const searchProperty = ref('lastName'); // Default to 'lastName'
 const currentPage = ref(1);
@@ -35,6 +36,22 @@ const fetchCustomersData = async () => {
       localStorage.setItem('lastFetchTime', now.toString());
     } catch (error) {
       console.error('Fehler beim Abrufen der Kunden:', error);
+    }
+  }
+
+  const cachedDogs = localStorage.getItem('dogs');
+  const lastFetchTimeDogs = localStorage.getItem('dogs_lastFetchTime');
+
+  if (cachedDogs && lastFetchTimeDogs && (now - lastFetchTimeDogs < fetchInterval)) {
+    dogs.value = JSON.parse(cachedDogs);
+  } else {
+    try {
+      const fetchedDogs = await fetchDogs();
+      dogs.value = fetchedDogs;
+      localStorage.setItem('dogs', JSON.stringify(dogs.value));
+      localStorage.setItem('dogs_lastFetchTime', now.toString());
+    } catch (error) {
+      console.error('Fehler beim Abrufen der Hunde:', error);
     }
   }
 };
@@ -160,7 +177,7 @@ const lastPage = () => {
     />
     <ul class="space-y-2">
       <li v-for="customer in paginatedCustomers" :key="customer.id" class="mb-2">
-        <CustomerItem :customer="customer" actionType="delete" @customerDeleted="handleCustomerDeleted" @customerUpdated="handleUpdateCustomer" />
+        <CustomerItem :customer="customer" :dogs="dogs" actionType="delete" @customerDeleted="handleCustomerDeleted" @customerUpdated="handleUpdateCustomer" />
       </li>
     </ul>
     <Pagination

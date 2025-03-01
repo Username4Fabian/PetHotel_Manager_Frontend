@@ -1,10 +1,11 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { defineProps, defineEmits } from 'vue';
 import EditCustomerOverlay from './EditCustomerOverlay.vue';
 
 const props = defineProps({
   customer: Object,
+  dogs: Array,
   actionType: {
     type: String,
     default: 'delete' // 'delete' or 'return'
@@ -31,6 +32,15 @@ const handleUpdateCustomer = (updatedCustomer) => {
   emits('customerUpdated', updatedCustomer);
   showEditOverlay.value = false;
 };
+
+const customerDogs = ref([]);
+
+const updateCustomerDogs = () => {
+  customerDogs.value = props.dogs.filter(dog => dog.downer && dog.downer.id === props.customer.id);
+};
+
+// Watch for changes in the dogs prop to update customerDogs
+watch(() => props.dogs, updateCustomerDogs, { immediate: true });
 </script>
 
 <template>
@@ -41,6 +51,12 @@ const handleUpdateCustomer = (updatedCustomer) => {
         <p class="text-sm text-gray-600"><strong>Kundennummer: </strong> {{ customer.id || '---' }}</p>
         <p class="text-sm text-gray-600"><strong>Telefonnummer: </strong> {{ customer.telefonnummer || '---' }}</p>
         <p class="text-sm text-gray-600"><strong>E-Mail: </strong> {{ customer.email || '---' }}</p>
+        <p class="text-sm text-gray-600"><strong>Haustiere: </strong>
+          <span v-if="customerDogs.length">
+            <span v-for="dog in customerDogs" :key="dog.id" class="mr-2">{{ dog.name }}</span>
+          </span>
+          <span v-else>---</span>
+        </p>
       </div>
       <div class="flex space-x-2">
         <button
