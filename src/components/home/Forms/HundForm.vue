@@ -1,26 +1,36 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import axios from 'axios';
 import CustomerSearch from './HundForm/CustomerSearch.vue';
 import ImageUpload from './HundForm/ImageUpload.vue';
 import DogInfoForm from './HundForm/DogInfoForm.vue';
-import { fetchCustomers, fetchDogs } from '@/services/dataService';
+import { fetchCustomers } from '@/services/dataService';
 import '@/assets/styles/forms.css';
 
-const dogData = ref({
-  name: '',
-  rasse: '',
-  passNr: '',
-  chipNr: '',
-  ownerId: null,
-  geschlecht: '',
+const props = defineProps({
+  initialData: {
+    type: Object,
+    default: () => ({
+      name: '',
+      rasse: '',
+      passNr: '',
+      chipNr: '',
+      ownerId: null,
+      geschlecht: '',
+    }),
+  },
+  isEdit: {
+    type: Boolean,
+    default: false,
+  },
 });
 
+const dogData = ref({ ...props.initialData });
+
 const customers = ref([]);
-const dogs = ref([]);
 const imageFile = ref(null);
 
-const emits = defineEmits(['show-toast']);
+const emits = defineEmits(['show-toast', 'addDog', 'updateDog']);
 
 const fetchInitialData = async () => {
   const fetchInterval = 2 * 60 * 1000; // 2 minutes in milliseconds
@@ -37,23 +47,19 @@ const fetchInitialData = async () => {
     localStorage.setItem('customers', JSON.stringify(customers.value));
     localStorage.setItem('customers_lastFetchTime', now.toString());
   }
-
-  const cachedDogs = localStorage.getItem('dogs');
-  const lastFetchTimeDogs = localStorage.getItem('dogs_lastFetchTime');
-
-  if (cachedDogs && lastFetchTimeDogs && (now - lastFetchTimeDogs < fetchInterval)) {
-    dogs.value = JSON.parse(cachedDogs);
-  } else {
-    const fetchedDogs = await fetchDogs();
-    dogs.value = fetchedDogs;
-    localStorage.setItem('dogs', JSON.stringify(dogs.value));
-    localStorage.setItem('dogs_lastFetchTime', now.toString());
-  }
 };
 
 onMounted(async () => {
   await fetchInitialData();
 });
+
+watch(
+  () => props.initialData,
+  (newData) => {
+    dogData.value = { ...newData };
+  },
+  { immediate: true }
+);
 
 const handleSubmit = async () => {
   if (!dogData.value.name) {
@@ -87,13 +93,11 @@ const handleSubmit = async () => {
       console.log('Image uploaded successfully');
     }
 
-    // Add the new dog to the dogs array
-    dogs.value.push(response.data);
-
-    // Update local storage with the updated dogs array
-    const existingDogs = JSON.parse(localStorage.getItem('dogs')) || [];
-    const updatedLocalStorage = [...existingDogs, response.data]; // Append the new dog
-    localStorage.setItem('dogs', JSON.stringify(updatedLocalStorage));
+    if (props.isEdit) {
+      emits('updateDog', response.data);
+    } else {
+      emits('addDog', response.data);
+    }
   } catch (error) {
     console.error('Error creating dog or uploading image:', error);
 
@@ -129,7 +133,7 @@ const updateDogData = (key, value) => {
 
       <!-- Submit Button -->
       <button type="submit" class="w-full px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
-        Speichern
+        {{ isEdit ? 'Aktualisieren' : 'Speichern' }}
       </button>
     </form>
   </div>
