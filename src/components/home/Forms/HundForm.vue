@@ -23,6 +23,7 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  customers: Array,
 });
 
 const dogData = ref({ ...props.initialData });
@@ -67,22 +68,22 @@ const handleSubmit = async () => {
     return;
   }
 
-  // Emit toast notification immediately
-  emits('show-toast', 'Hund erfolgreich erstellt!');
-
-  // Close the form overlay immediately
-  const closeFormEvent = new CustomEvent('close-form');
-  window.dispatchEvent(closeFormEvent);
-
   try {
-    const response = await axios.post('/api/dog/saveDog', dogData.value, {
-      params: { ownerId: dogData.value.ownerId },
-    });
-    console.log('Dog created:', response.data);
+    let response;
+    if (props.isEdit) {
+      response = await axios.post('/api/dog/UpdateDog', dogData.value);
+      console.log('Emitting updateDog:', response.data.dog); // Debugging
+      emits('updateDog', response.data.dog); // Emit the updateDog event with updated data
+    } else {
+      response = await axios.post('/api/dog/saveDog', dogData.value, {
+        params: { ownerId: dogData.value.ownerId },
+      });
+      emits('addDog', response.data.dog);
+    }
 
     if (imageFile.value) {
       const formData = new FormData();
-      formData.append('dogId', response.data.id); // Use response.data.id instead of response.data.dogId
+      formData.append('dogId', response.data.dogId);
       formData.append('image', imageFile.value);
 
       await axios.post('/api/dog/uploadImage', formData, {
@@ -90,19 +91,23 @@ const handleSubmit = async () => {
           'Content-Type': 'multipart/form-data',
         },
       });
-      console.log('Image uploaded successfully');
     }
 
+    const dogs = JSON.parse(localStorage.getItem('dogs')) || [];
     if (props.isEdit) {
-      emits('updateDog', response.data);
+      const index = dogs.findIndex(d => d.id === response.data.dog.id);
+      if (index !== -1) {
+        dogs[index] = { ...response.data.dog };
+      }
     } else {
-      emits('addDog', response.data);
+      dogs.push(response.data.dog);
     }
-  } catch (error) {
-    console.error('Error creating dog or uploading image:', error);
+    localStorage.setItem('dogs', JSON.stringify(dogs));
+    dogs.value = [...dogs];
 
-    // Emit an error toast notification
-    emits('show-toast', 'Fehler beim Erstellen des Hundes!');
+  } catch (error) {
+    console.error('Error creating/updating dog or uploading image:', error);
+    emits('show-toast', 'Fehler beim Erstellen/Aktualisieren des Hundes!');
   }
 };
 

@@ -4,14 +4,17 @@ import { defineProps, defineEmits } from 'vue';
 import EditDogOverlay from './EditDogOverlay.vue';
 
 const props = defineProps({
-  dog: Object,
+  dog: {
+    type: Object,
+    required: true,
+  },
   actionType: {
     type: String,
-    default: 'delete' // 'delete' or 'return'
-  }
+    default: 'delete',
+  },
 });
 
-const emits = defineEmits(['dogDeleted', 'dogUpdated']);
+const emits = defineEmits(['dogDeleted', 'dogUpdated', 'editDog']);
 
 const showDetails = ref(false);
 const showEditOverlay = ref(false);
@@ -31,6 +34,10 @@ const handleUpdateDog = (updatedDog) => {
   emits('dogUpdated', updatedDog);
   showEditOverlay.value = false;
 };
+
+const closeEditOverlay = () => {
+  showEditOverlay.value = false;
+};
 </script>
 
 <template>
@@ -42,7 +49,7 @@ const handleUpdateDog = (updatedDog) => {
       </div>
       <div class="flex space-x-2">
         <button
-          @click.stop="showEditOverlay = true"
+          @click.stop="showEditOverlay = true; emits('editDog', dog)"
           class="text-gray-500 hover:text-blue-600 transition-colors duration-200 text-3xl hover:cursor-pointer mr-10">
           <i class="fas fa-edit"></i>
         </button>
@@ -60,7 +67,7 @@ const handleUpdateDog = (updatedDog) => {
       <i
         class="fas text-gray-500 transition-transform duration-300"
         :class="showDetails ? 'fa-chevron-up' : 'fa-chevron-down'">
-    </i>
+      </i>
     </div>
 
     <!-- Details section -->
@@ -71,6 +78,6 @@ const handleUpdateDog = (updatedDog) => {
       <p class="text-sm text-gray-600"><strong>Impfpass Nummer: </strong> {{ dog.passNr || '---' }}</p>
       <p class="text-sm text-gray-600"><strong>Chip Nummer: </strong> {{ dog.chipNr || '---' }}</p>
     </div>
-    <EditDogOverlay v-if="showEditOverlay" :dog="dog" @closeOverlay="showEditOverlay = false" @updateDog="handleUpdateDog" />
+    <EditDogOverlay v-if="showEditOverlay" :dog="dog" @closeOverlay="closeEditOverlay" @updateDog="handleUpdateDog" />
   </div>
 </template>

@@ -19,6 +19,7 @@ const showOverlay = ref(false);
 const showEditOverlay = ref(false);
 const showToast = ref(false);
 const toastMessage = ref('');
+const selectedDog = ref(null);
 const fetchInterval = 3 * 60 * 1000; // 3 minutes in milliseconds
 
 const fetchDogsData = async () => {
@@ -86,29 +87,42 @@ const handleDogDeleted = async (deletedDog) => {
   }
 };
 
-const handleUpdateDog = async (updatedDog) => {
-  const originalDogs = [...dogs.value];
+const handleUpdateDog = (updatedDog) => {
+  console.log('Handling update in DogOverview:', updatedDog); // Debugging
   const index = dogs.value.findIndex(d => d.id === updatedDog.id);
   if (index !== -1) {
-    dogs.value[index] = updatedDog;
+    dogs.value = [
+      ...dogs.value.slice(0, index),
+      updatedDog,
+      ...dogs.value.slice(index + 1)
+    ];
     localStorage.setItem('dogs', JSON.stringify(dogs.value));
     toastMessage.value = 'Hund erfolgreich aktualisiert!';
     showToast.value = true;
   }
+  showEditOverlay.value = false; // Close the overlay
+};
 
-  try {
-    await axios.post('/api/dog/UpdateDog', updatedDog);
-  } catch (error) {
-    console.error('Fehler beim Aktualisieren des Hundes:', error);
-    dogs.value = originalDogs;
-    localStorage.setItem('dogs', JSON.stringify(dogs.value));
-    toastMessage.value = 'Fehler beim Aktualisieren des Hundes!';
-    showToast.value = true;
-  }
+// Handle the closeOverlay event from EditDogOverlay
+const handleCloseOverlay = () => {
+  console.log('Overlay closed'); // Debugging
+  showEditOverlay.value = false;
+};
+
+const handleUploadSuccess = (message) => {
+  toastMessage.value = message;
+  showToast.value = true;
 };
 
 const closeToast = () => {
   showToast.value = false;
+};
+
+const editDog = (dog) => {
+  if (!showEditOverlay.value) {
+    selectedDog.value = dog;
+    showEditOverlay.value = true;
+  }
 };
 
 onMounted(() => {
@@ -177,7 +191,7 @@ const lastPage = () => {
     />
     <ul class="space-y-2">
       <li v-for="dog in paginatedDogs" :key="dog.id" class="mb-2">
-        <DogItem :dog="dog" actionType="delete" @dogDeleted="handleDogDeleted" @dogUpdated="handleUpdateDog" />
+        <DogItem :dog="dog" actionType="delete" @dogDeleted="handleDogDeleted" @dogUpdated="handleUpdateDog" @editDog="editDog" />
       </li>
     </ul>
     <Pagination
@@ -189,7 +203,6 @@ const lastPage = () => {
       @lastPage="lastPage"
     />
     <AddDogOverlay v-if="showOverlay" @closeOverlay="showOverlay = false" @addDog="addDog" @show-toast="handleUploadSuccess" />
-    <EditDogOverlay v-if="showEditOverlay" :dog="selectedDog" @closeOverlay="showEditOverlay = false" @updateDog="handleUpdateDog" @show-toast="handleUploadSuccess" />
     <Toast v-if="showToast" :message="toastMessage" @close="closeToast" />
   </div>
 </template>

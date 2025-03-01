@@ -56,6 +56,12 @@ const fetchAndCacheImage = async () => {
   }
 };
 
+const addDog = (newDog) => {
+  dogs.value.push(newDog);
+  localStorage.setItem('dogs', JSON.stringify(dogs.value));
+  handleSuccess('Hund erfolgreich hinzugefügt!');
+};
+
 onMounted(async () => {
   await fetchAndCacheImage();
 
@@ -91,7 +97,7 @@ onMounted(async () => {
           <h2 class="text-xl font-bold mb-4">
             {{ formType === 'termin' ? 'Neuen Termin anlegen' : formType === 'hund' ? 'Neuen Hund anlegen' : 'Neuen Kunden anlegen' }}
           </h2>
-          <component :is="formType === 'termin' ? TerminForm : formType === 'hund' ? HundForm : KundenForm" @show-toast="handleSuccess" @closeOverlay="closeForm" />
+          <component :is="formType === 'termin' ? TerminForm : formType === 'hund' ? HundForm : KundenForm" @addDog="addDog" @show-toast="handleSuccess" @closeOverlay="closeForm" />
         </div>
       </div>
     </div>

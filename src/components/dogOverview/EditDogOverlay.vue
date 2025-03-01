@@ -1,24 +1,36 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import HundForm from '@/components/home/Forms/HundForm.vue';
 import { defineProps, defineEmits } from 'vue';
 
 const props = defineProps({
   dog: Object,
-  customers: Array,
 });
 
 const emits = defineEmits(['closeOverlay', 'updateDog', 'show-toast']);
 const showOverlay = ref(true);
+const localDog = ref({ ...props.dog });
+
+watch(
+  () => props.dog,
+  (newDog) => {
+    console.log('Updating localDog:', newDog); // Debugging
+    localDog.value = { ...newDog };
+  },
+  { immediate: true, deep: true }
+);
 
 const closeOverlay = () => {
+  console.log('Closing overlay'); // Debugging
   showOverlay.value = false;
-  emits('closeOverlay');
+  emits('closeOverlay'); // Emit the closeOverlay event
 };
 
 const updateDog = (updatedDog) => {
+  console.log('Updating dog in EditDogOverlay:', updatedDog); // Debugging
+  localDog.value = { ...updatedDog }; // Update localDog immediately
   emits('updateDog', updatedDog);
-  closeOverlay();
+  closeOverlay(); // Close the overlay after updating
 };
 
 const handleUploadSuccess = () => {
@@ -34,7 +46,7 @@ const handleUploadSuccess = () => {
         &times;
       </button>
       <h2 class="text-xl font-bold mb-4">Hund bearbeiten</h2>
-      <HundForm :initialData="dog" :customers="customers" :isEdit="true" @updateDog="updateDog" @show-toast="handleUploadSuccess" />
+      <HundForm :initialData="localDog" :isEdit="true" @updateDog="updateDog" @show-toast="handleUploadSuccess" />
     </div>
   </div>
 </template>
