@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import CustomerSearchBar from '@/components/customerOverview/CustomerSearchBar.vue';
 import CustomerItem from '@/components/customerOverview/CustomerItem.vue';
 import Pagination from '@/components/customerOverview/Pagination.vue';
@@ -23,6 +23,7 @@ const toastMessage = ref('');
 const fetchInterval = 3 * 60 * 1000; // 3 minutes in milliseconds
 
 const route = useRoute();
+const router = useRouter();
 
 const fetchCustomersData = async () => {
   const cachedCustomers = localStorage.getItem('customers');
@@ -114,6 +115,10 @@ const closeToast = () => {
   showToast.value = false;
 };
 
+const viewCustomerDogs = (customerId) => {
+  router.push({ name: 'DogOverview', query: { ownerId: customerId } });
+};
+
 onMounted(() => {
   fetchCustomersData();
 });
@@ -140,6 +145,8 @@ const filteredCustomers = computed(() => {
         customer.firstName.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
         customer.lastName.toLowerCase().includes(searchQuery.value.toLowerCase())
       );
+    } else if (searchProperty.value === 'id') {
+      return String(customer.id) === searchQuery.value;
     } else {
       return String(customer[searchProperty.value]).toLowerCase().includes(searchQuery.value.toLowerCase());
     }
@@ -188,7 +195,7 @@ const lastPage = () => {
     />
     <ul class="space-y-2">
       <li v-for="customer in paginatedCustomers" :key="customer.id" class="mb-2">
-        <CustomerItem :customer="customer" :dogs="dogs" actionType="delete" @customerDeleted="handleCustomerDeleted" @customerUpdated="handleUpdateCustomer" />
+        <CustomerItem :customer="customer" :dogs="dogs" actionType="delete" @customerDeleted="handleCustomerDeleted" @customerUpdated="handleUpdateCustomer" @viewCustomerDogs="viewCustomerDogs" />
       </li>
     </ul>
     <Pagination

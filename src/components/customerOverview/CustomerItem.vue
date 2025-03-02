@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { defineProps, defineEmits } from 'vue';
+import { useRouter } from 'vue-router';
 import EditCustomerOverlay from './EditCustomerOverlay.vue';
 
 const props = defineProps({
@@ -12,10 +13,12 @@ const props = defineProps({
   }
 });
 
-const emits = defineEmits(['customerDeleted', 'customerUpdated']);
+const emits = defineEmits(['customerDeleted', 'customerUpdated', 'viewCustomerDogs']);
 
 const showDetails = ref(false);
 const showEditOverlay = ref(false);
+
+const router = useRouter();
 
 const toggleDetails = () => {
   showDetails.value = !showDetails.value;
@@ -50,6 +53,10 @@ const chunkedDogs = computed(() => {
   }
   return chunks;
 });
+
+const viewCustomerDogs = () => {
+  router.push({ name: 'dog-overview', query: { ownerId: props.customer.id } });
+};
 </script>
 
 <template>
@@ -63,7 +70,7 @@ const chunkedDogs = computed(() => {
         <p class="text-sm text-gray-600"><strong>Haustiere: </strong>
           <span v-if="customerDogs.length">
             <span v-for="chunk in chunkedDogs" :key="chunk[0].id">
-              <span v-for="dog in chunk" :key="dog.id" class="mr-2">{{ dog.name }}</span>
+              <span v-for="dog in chunk" :key="dog.id" class="mr-2 text-blue-900 hover:underline cursor-help" @click.stop="viewCustomerDogs">{{ dog.name }}</span>
               <br v-if="chunk.length === 5" />
             </span>
           </span>

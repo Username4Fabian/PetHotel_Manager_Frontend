@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import DogSearchBar from '@/components/dogOverview/DogSearchBar.vue';
 import DogItem from '@/components/dogOverview/DogItem.vue';
 import Pagination from '@/components/customerOverview/Pagination.vue';
@@ -21,6 +22,8 @@ const showToast = ref(false);
 const toastMessage = ref('');
 const selectedDog = ref(null);
 const fetchInterval = 3 * 60 * 1000; // 3 minutes in milliseconds
+
+const route = useRoute();
 
 const fetchDogsData = async () => {
   const cachedDogs = localStorage.getItem('dogs');
@@ -136,6 +139,14 @@ watch([searchQuery, searchProperty], () => {
   currentPage.value = 1;
 });
 
+watch(route, () => {
+  const ownerId = route.query.ownerId;
+  if (ownerId) {
+    searchQuery.value = ownerId;
+    searchProperty.value = 'ownerId';
+  }
+}, { immediate: true });
+
 const filteredDogs = computed(() => {
   if (!searchQuery.value) {
     return dogs.value;
@@ -146,6 +157,10 @@ const filteredDogs = computed(() => {
         dog.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
         dog.rasse.toLowerCase().includes(searchQuery.value.toLowerCase())
       );
+    } else if (searchProperty.value === 'ownerId') {
+      return String(dog.downer.id) === searchQuery.value;
+    } else if (searchProperty.value === 'id') {
+      return String(dog.id) === searchQuery.value;
     } else {
       return String(dog[searchProperty.value]).toLowerCase().includes(searchQuery.value.toLowerCase());
     }
