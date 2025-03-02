@@ -19,11 +19,15 @@ const props = defineProps({
       geschlecht: '',
     }),
   },
+  customers: Array,
+  showOwnerField: {
+    type: Boolean,
+    default: true,
+  },
   isEdit: {
     type: Boolean,
     default: false,
   },
-  customers: Array,
 });
 
 const dogData = ref({ ...props.initialData });
@@ -138,6 +142,7 @@ const updateDogData = (key, value) => {
       <DogInfoForm
         :dogData="dogData"
         :customers="customers"
+        :showOwnerField="showOwnerField"
         @update:dogData="updateDogData"
       />
 

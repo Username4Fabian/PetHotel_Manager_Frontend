@@ -10,6 +10,10 @@ defineProps({
     type: Array,
     required: true,
   },
+  showOwnerField: {
+    type: Boolean,
+    default: true,
+  },
 });
 
 const emit = defineEmits(['update:dogData']);
@@ -68,13 +72,11 @@ const updateField = (key, value) => {
           Chip Nummer
         </label>
       </div>
-      <div class="relative">
+      <div :class="{'col-span-2': !showOwnerField}" class="relative">
         <select
           :value="dogData.geschlecht"
           @change="updateField('geschlecht', $event.target.value)"
-          class="w-full px-3 py-2 border rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="" disabled></option>
+          class="w-full px-3 py-2 border rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option value="männlich">Männlich</option>
           <option value="weiblich">Weiblich</option>
         </select>
@@ -82,7 +84,7 @@ const updateField = (key, value) => {
           Geschlecht
         </label>
       </div>
-      <div class="relative">
+      <div v-if="showOwnerField" class="relative">
         <CustomerSearch
           :customers="customers"
           @selectCustomer="(customer) => updateField('ownerId', customer.id)"

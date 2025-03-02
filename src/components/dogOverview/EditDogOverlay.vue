@@ -46,7 +46,7 @@ const handleUploadSuccess = () => {
         &times;
       </button>
       <h2 class="text-xl font-bold mb-4">Hund bearbeiten</h2>
-      <HundForm :initialData="localDog" :isEdit="true" @updateDog="updateDog" @show-toast="handleUploadSuccess" />
+      <HundForm :initialData="localDog" :isEdit="true" :showOwnerField="false" @updateDog="updateDog" @show-toast="handleUploadSuccess" />
     </div>
   </div>
 </template>
