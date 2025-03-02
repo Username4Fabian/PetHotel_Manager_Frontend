@@ -41,6 +41,15 @@ const updateCustomerDogs = () => {
 
 // Watch for changes in the dogs prop to update customerDogs
 watch(() => props.dogs, updateCustomerDogs, { immediate: true });
+
+const chunkedDogs = computed(() => {
+  const chunkSize = 5;
+  const chunks = [];
+  for (let i = 0; i < customerDogs.value.length; i += chunkSize) {
+    chunks.push(customerDogs.value.slice(i, i + chunkSize));
+  }
+  return chunks;
+});
 </script>
 
 <template>
@@ -53,7 +62,10 @@ watch(() => props.dogs, updateCustomerDogs, { immediate: true });
         <p class="text-sm text-gray-600"><strong>E-Mail: </strong> {{ customer.email || '---' }}</p>
         <p class="text-sm text-gray-600"><strong>Haustiere: </strong>
           <span v-if="customerDogs.length">
-            <span v-for="dog in customerDogs" :key="dog.id" class="mr-2">{{ dog.name }}</span>
+            <span v-for="chunk in chunkedDogs" :key="chunk[0].id">
+              <span v-for="dog in chunk" :key="dog.id" class="mr-2">{{ dog.name }}</span>
+              <br v-if="chunk.length === 5" />
+            </span>
           </span>
           <span v-else>---</span>
         </p>

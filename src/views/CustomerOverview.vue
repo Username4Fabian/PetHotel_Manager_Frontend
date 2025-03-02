@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import CustomerSearchBar from '@/components/customerOverview/CustomerSearchBar.vue';
 import CustomerItem from '@/components/customerOverview/CustomerItem.vue';
 import Pagination from '@/components/customerOverview/Pagination.vue';
@@ -20,6 +21,8 @@ const showEditOverlay = ref(false);
 const showToast = ref(false);
 const toastMessage = ref('');
 const fetchInterval = 3 * 60 * 1000; // 3 minutes in milliseconds
+
+const route = useRoute();
 
 const fetchCustomersData = async () => {
   const cachedCustomers = localStorage.getItem('customers');
@@ -118,6 +121,14 @@ onMounted(() => {
 watch([searchQuery, searchProperty], () => {
   currentPage.value = 1;
 });
+
+watch(route, () => {
+  const ownerId = route.query.ownerId;
+  if (ownerId) {
+    searchQuery.value = ownerId;
+    searchProperty.value = 'id';
+  }
+}, { immediate: true });
 
 const filteredCustomers = computed(() => {
   if (!searchQuery.value) {
