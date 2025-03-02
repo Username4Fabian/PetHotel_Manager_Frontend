@@ -60,9 +60,14 @@ const fetchDogsData = async () => {
 const addDog = (newDog) => {
   // Optimistically add the new dog
   dogs.value.push(newDog);
-  localStorage.setItem('dogs', JSON.stringify(dogs.value));
   toastMessage.value = 'Hund erfolgreich hinzugefügt!';
   showToast.value = true;
+
+  // Update pagination
+  const totalPages = Math.ceil(dogs.value.length / dogsPerPage);
+  if (currentPage.value > totalPages) {
+    currentPage.value = totalPages;
+  }
 };
 
 const handleDogDeleted = async (deletedDog) => {
@@ -200,7 +205,7 @@ const lastPage = () => {
       @firstPage="firstPage"
       @lastPage="lastPage"
     />
-    <AddDogOverlay v-if="showOverlay" @closeOverlay="showOverlay = false" @addDog="addDog" @show-toast="handleUploadSuccess" />
+    <AddDogOverlay v-if="showOverlay" :customers="customers" @closeOverlay="showOverlay = false" @addDog="addDog" @show-toast="handleUploadSuccess" />
     <EditDogOverlay v-if="showEditOverlay" :dog="selectedDog" @closeOverlay="showEditOverlay = false" @updateDog="handleUpdateDog" />
     <Toast v-if="showToast" :message="toastMessage" @close="closeToast" />
   </div>

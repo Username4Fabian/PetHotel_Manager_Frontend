@@ -58,7 +58,6 @@ const fetchAndCacheImage = async () => {
 
 const addDog = (newDog) => {
   dogs.value.push(newDog);
-  localStorage.setItem('dogs', JSON.stringify(dogs.value));
   handleSuccess('Hund erfolgreich hinzugefügt!');
   closeForm(); // Close the form after adding the dog
 };

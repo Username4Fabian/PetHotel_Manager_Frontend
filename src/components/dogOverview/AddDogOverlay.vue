@@ -1,7 +1,14 @@
 <script setup>
 import { ref } from 'vue';
 import HundForm from '@/components/home/Forms/HundForm.vue';
-import { defineEmits } from 'vue';
+import { defineProps, defineEmits } from 'vue';
+
+const props = defineProps({
+  customers: {
+    type: Array,
+    required: true,
+  },
+});
 
 const emits = defineEmits(['closeOverlay', 'addDog', 'show-toast']);
 const showOverlay = ref(true);
@@ -12,6 +19,11 @@ const closeOverlay = () => {
 };
 
 const addDog = (newDog) => {
+  // Fetch the owner information from the customers list
+  const owner = props.customers.find(customer => customer.id === newDog.ownerId);
+  if (owner) {
+    newDog.downer = owner;
+  }
   emits('addDog', newDog);
   closeOverlay();
 };
@@ -29,7 +41,7 @@ const handleUploadSuccess = () => {
         &times;
       </button>
       <h2 class="text-xl font-bold mb-4">Neuen Hund anlegen</h2>
-      <HundForm @addDog="addDog" @show-toast="handleUploadSuccess" />
+      <HundForm :customers="customers" @addDog="addDog" @show-toast="handleUploadSuccess" />
     </div>
   </div>
 </template>

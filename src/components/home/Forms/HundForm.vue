@@ -72,13 +72,6 @@ const handleSubmit = async () => {
     return;
   }
 
-  // Optimistically update the UI
-  if (props.isEdit) {
-    emits('updateDog', dogData.value); // Emit the updateDog event with the updated data
-  } else {
-    emits('addDog', dogData.value); // Emit the addDog event with the new data
-  }
-
   try {
     let response;
     if (props.isEdit) {
@@ -91,7 +84,7 @@ const handleSubmit = async () => {
 
     if (imageFile.value) {
       const formData = new FormData();
-      formData.append('dogId', response.data.dogId);
+      formData.append('dogId', response.data.dog.id);
       formData.append('image', imageFile.value);
 
       await axios.post('/api/dog/uploadImage', formData, {
@@ -100,6 +93,9 @@ const handleSubmit = async () => {
         },
       });
     }
+
+    // Emit the new dog data
+    emits('addDog', response.data.dog);
 
     // Update local storage with the server response
     const dogs = JSON.parse(localStorage.getItem('dogs')) || [];
@@ -112,7 +108,6 @@ const handleSubmit = async () => {
       dogs.push(response.data.dog);
     }
     localStorage.setItem('dogs', JSON.stringify(dogs));
-    dogs.value = [...dogs];
 
     // Emit success message and close the form
     emits('show-toast', 'Hund erfolgreich hinzugefügt!');

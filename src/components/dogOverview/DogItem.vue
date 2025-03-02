@@ -6,6 +6,18 @@ const props = defineProps({
   dog: {
     type: Object,
     required: true,
+    default: () => ({
+      name: '',
+      rasse: '',
+      passNr: '',
+      chipNr: '',
+      ownerId: null,
+      geschlecht: '',
+      downer: {
+        firstName: '',
+        lastName: '',
+      },
+    }),
   },
   actionType: {
     type: String,
@@ -38,7 +50,7 @@ const handleUpdateDog = (updatedDog) => {
     <div class="flex justify-between items-center">
       <div>
         <h2 class="text-xl font-semibold text-gray-800">{{ dog.name }}</h2>
-        <p class="text-sm text-gray-600"><strong>Besitzer: </strong> {{ dog.downer.firstName }} {{ dog.downer.lastName }}</p>
+        <p class="text-sm text-gray-600"><strong>Besitzer: </strong> {{ dog.downer?.firstName }} {{ dog.downer?.lastName}}</p>
       </div>
       <div class="flex space-x-2">
         <button
