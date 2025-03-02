@@ -72,42 +72,65 @@ const handleSubmit = async () => {
     return;
   }
 
+  // Optimistic UI update
+  const originalDogData = { ...dogData.value };
+  let optimisticDogData = { ...dogData.value, id: props.isEdit ? dogData.value.id : Date.now() }; // Temporary ID for new dog
+
   try {
-    let response;
     if (props.isEdit) {
-      response = await axios.post('/api/dog/UpdateDog', dogData.value);
-    } else {
-      response = await axios.post('/api/dog/saveDog', dogData.value, {
-        params: { ownerId: dogData.value.ownerId },
-      });
-    }
+      emits('updateDog', optimisticDogData); // Emit the optimistic dog data
+      const response = await axios.post('/api/dog/UpdateDog', dogData.value);
 
-    if (imageFile.value) {
-      const formData = new FormData();
-      formData.append('dogId', response.data.dog.id);
-      formData.append('image', imageFile.value);
+      // Update the optimistic dog data with the actual ID from the server response
+      optimisticDogData.id = response.data.dog.id;
+      emits('updateDog', optimisticDogData);
 
-      await axios.post('/api/dog/uploadImage', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-    }
+      if (imageFile.value) {
+        const formData = new FormData();
+        formData.append('dogId', response.data.dog.id);
+        formData.append('image', imageFile.value);
 
-    // Emit the new dog data
-    emits('addDog', response.data.dog);
+        await axios.post('/api/dog/uploadImage', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+      }
 
-    // Update local storage with the server response
-    const dogs = JSON.parse(localStorage.getItem('dogs')) || [];
-    if (props.isEdit) {
+      // Update local storage with the server response
+      const dogs = JSON.parse(localStorage.getItem('dogs')) || [];
       const index = dogs.findIndex(d => d.id === response.data.dog.id);
       if (index !== -1) {
         dogs[index] = { ...response.data.dog };
       }
+      localStorage.setItem('dogs', JSON.stringify(dogs));
     } else {
+      emits('addDog', optimisticDogData); // Emit the optimistic dog data
+      const response = await axios.post('/api/dog/saveDog', dogData.value, {
+        params: { ownerId: dogData.value.ownerId },
+      });
+
+      // Update the optimistic dog data with the actual ID from the server response
+      optimisticDogData.id = response.data.dog.id;
+      emits('updateDog', optimisticDogData);
+
+      if (imageFile.value) {
+        const formData = new FormData();
+        formData.append('dogId', response.data.dog.id);
+        formData.append('image', imageFile.value);
+
+        await axios.post('/api/dog/uploadImage', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+      }
+
+      // Update local storage with the server response
+      const dogs = JSON.parse(localStorage.getItem('dogs')) || [];
       dogs.push(response.data.dog);
+      localStorage.setItem('dogs', JSON.stringify(dogs));
     }
-    localStorage.setItem('dogs', JSON.stringify(dogs));
 
     // Emit success message and close the form
     emits('show-toast', 'Hund erfolgreich hinzugefügt!');
@@ -118,7 +141,7 @@ const handleSubmit = async () => {
     emits('show-toast', 'Fehler beim Erstellen/Aktualisieren des Hundes!');
     // Revert the optimistic update in case of an error
     if (props.isEdit) {
-      emits('updateDog', props.initialData); // Revert to the initial data
+      emits('updateDog', originalDogData); // Revert to the original data
     } else {
       emits('addDog', null); // Remove the added dog
     }
