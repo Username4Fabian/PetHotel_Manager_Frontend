@@ -35,7 +35,7 @@ const dogData = ref({ ...props.initialData });
 const customers = ref([]);
 const imageFile = ref(null);
 
-const emits = defineEmits(['show-toast', 'addDog', 'updateDog']);
+const emits = defineEmits(['show-toast', 'addDog', 'updateDog', 'closeOverlay']);
 
 const fetchInitialData = async () => {
   const fetchInterval = 2 * 60 * 1000; // 2 minutes in milliseconds
@@ -113,6 +113,10 @@ const handleSubmit = async () => {
     }
     localStorage.setItem('dogs', JSON.stringify(dogs));
     dogs.value = [...dogs];
+
+    // Emit success message and close the form
+    emits('show-toast', 'Hund erfolgreich hinzugefügt!');
+    emits('closeOverlay');
 
   } catch (error) {
     console.error('Error creating/updating dog or uploading image:', error);
