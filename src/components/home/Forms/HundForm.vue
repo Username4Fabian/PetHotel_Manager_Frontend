@@ -181,5 +181,3 @@ const updateDogData = (key, value) => {
     </form>
   </div>
 </template>
-
-// TODO: Link to Customer and Link Customer to filtered dogs / Include Dog Images
