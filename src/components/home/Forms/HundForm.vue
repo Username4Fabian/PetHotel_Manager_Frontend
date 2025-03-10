@@ -4,7 +4,7 @@ import axios from 'axios';
 import CustomerSearch from './HundForm/CustomerSearch.vue';
 import ImageUpload from './HundForm/ImageUpload.vue';
 import DogInfoForm from './HundForm/DogInfoForm.vue';
-import { fetchCustomers } from '@/services/dataService';
+import { fetchCustomers, fetchDogs } from '@/services/dataService'; // Import fetchDogs
 import '@/assets/styles/forms.css';
 
 const props = defineProps({
@@ -31,8 +31,8 @@ const props = defineProps({
 });
 
 const dogData = ref({ ...props.initialData });
-
 const customers = ref([]);
+const dogs = ref([]); // Add dogs ref
 const imageFile = ref(null);
 
 const emits = defineEmits(['show-toast', 'addDog', 'updateDog', 'closeOverlay']);
@@ -51,6 +51,18 @@ const fetchInitialData = async () => {
     customers.value = fetchedCustomers;
     localStorage.setItem('customers', JSON.stringify(customers.value));
     localStorage.setItem('customers_lastFetchTime', now.toString());
+  }
+
+  // Fetch dogs data
+  const cachedDogs = localStorage.getItem('dogs');
+  const lastFetchTimeDogs = localStorage.getItem('dogs_lastFetchTime');
+  if (cachedDogs && lastFetchTimeDogs && (now - lastFetchTimeDogs < fetchInterval)) {
+    dogs.value = JSON.parse(cachedDogs);
+  } else {
+    const fetchedDogs = await fetchDogs();
+    dogs.value = fetchedDogs;
+    localStorage.setItem('dogs', JSON.stringify(dogs.value));
+    localStorage.setItem('dogs_lastFetchTime', now.toString());
   }
 };
 
@@ -164,6 +176,7 @@ const updateDogData = (key, value) => {
       <DogInfoForm
         :dogData="dogData"
         :customers="customers"
+        :dogs="dogs" 
         :showOwnerField="showOwnerField"
         @update:dogData="updateDogData"
       />

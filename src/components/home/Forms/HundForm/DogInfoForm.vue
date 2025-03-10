@@ -1,5 +1,6 @@
 <script setup>
 import CustomerSearch from './CustomerSearch.vue';
+import BreedSearch from './BreedSearch.vue'; // Import the new BreedSearch component
 
 defineProps({
   dogData: {
@@ -13,6 +14,10 @@ defineProps({
   showOwnerField: {
     type: Boolean,
     default: true,
+  },
+  dogs: {
+    type: Array,
+    required: true,
   },
 });
 
@@ -40,15 +45,12 @@ const updateField = (key, value) => {
         </label>
       </div>
       <div class="relative">
-        <input
-          :value="dogData.rasse"
-          @input="updateField('rasse', $event.target.value)"
-          type="text"
-          class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        <!-- BreedSearch Component -->
+        <BreedSearch
+          :dogs="dogs"
+          :selectedBreed="dogData.rasse" 
+          @selectBreed="(breed) => updateField('rasse', breed)"
         />
-        <label class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 pointer-events-none">
-          Rasse
-        </label>
       </div>
       <div class="relative">
         <input
