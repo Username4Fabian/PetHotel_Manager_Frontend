@@ -1,49 +1,69 @@
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
+import axios from 'axios';
 import '@/assets/styles/forms.css';
 
 const props = defineProps({
-  dogs: Array, // Pass the list of dogs as a prop
   selectedBreed: String, // Pass the selected breed for editing
 });
 
-const emit = defineEmits(['selectBreed']);
+const emit = defineEmits(['update:modelValue']);
 
 const searchQuery = ref(props.selectedBreed || ''); // Initialize with the selected breed
 const showDropdown = ref(false);
+const breeds = ref([]);
 
-// Compute breeds sorted by quantity
-const sortedBreeds = computed(() => {
-  const breedCounts = {};
-  props.dogs.forEach(dog => {
-    if (dog.rasse) {
-      breedCounts[dog.rasse] = (breedCounts[dog.rasse] || 0) + 1;
+const fetchBreeds = async () => {
+  const fetchInterval = 2 * 60 * 1000; // 2 minutes in milliseconds
+  const cachedBreeds = localStorage.getItem('breeds');
+  const lastFetchTimeBreeds = localStorage.getItem('breeds_lastFetchTime');
+  const now = Date.now();
+
+  if (cachedBreeds && lastFetchTimeBreeds && (now - lastFetchTimeBreeds < fetchInterval)) {
+    breeds.value = JSON.parse(cachedBreeds);
+  } else {
+    try {
+      const response = await axios.get('/api/dog/GetAllBreeds');
+      breeds.value = response.data.map(breed => ({ breed }));
+      localStorage.setItem('breeds', JSON.stringify(breeds.value));
+      localStorage.setItem('breeds_lastFetchTime', now.toString());
+    } catch (error) {
+      console.error('Error fetching breeds:', error);
     }
-  });
-
-  // Convert to an array of { breed, count } objects
-  const breedsArray = Object.keys(breedCounts).map(breed => ({
-    breed,
-    count: breedCounts[breed],
-  }));
-
-  // Sort by count in descending order
-  breedsArray.sort((a, b) => b.count - a.count);
-
-  return breedsArray;
-});
+  }
+};
 
 const filteredBreeds = computed(() => {
-  if (!searchQuery.value) return sortedBreeds.value;
-  return sortedBreeds.value.filter(({ breed }) =>
+  if (!searchQuery.value) return breeds.value;
+  return breeds.value.filter(({ breed }) =>
     breed.toLowerCase().includes(searchQuery.value.toLowerCase())
   );
 });
 
-const selectBreed = (breed) => {
-  emit('selectBreed', breed);
+const selectBreed = async (breed) => {
+  emit('update:modelValue', breed);
   searchQuery.value = breed; // Set the search query to the selected breed
   showDropdown.value = false;
+
+  // Check if the breed exists in the list, if not, add it to the list and update local storage
+  if (!breeds.value.some(b => b.breed === breed)) {
+    breeds.value.push({ breed: breed }); // Ensure the breed property is correctly set
+    localStorage.setItem('breeds', JSON.stringify(breeds.value));
+
+    // Save the new breed to the database
+    try {
+      await axios.post('/api/dog/AddBreed', { breed });
+    } catch (error) {
+      console.error('Error saving breed to the database:', error);
+    }
+  }
+};
+
+// Emit the custom breed value whenever the input changes
+const handleInput = (event) => {
+  const value = event.target.value;
+  searchQuery.value = value;
+  emit('update:modelValue', value); // Emit the custom breed value
 };
 
 // Watch for changes in the selected breed and update the search query
@@ -54,30 +74,18 @@ watch(
   }
 );
 
-// Watch for changes in the dogs array to update the dropdown
-watch(
-  () => props.dogs,
-  () => {
-    // Force re-computation of sortedBreeds and filteredBreeds
-  },
-  { deep: true }
-);
-
-// Allow the user to enter a new breed if it doesn't exist
-const handleInputBlur = () => {
-  if (searchQuery.value && !sortedBreeds.value.some(({ breed }) => breed === searchQuery.value)) {
-    emit('selectBreed', searchQuery.value);
-  }
-};
+onMounted(() => {
+  fetchBreeds();
+});
 </script>
 
 <template>
   <div class="relative">
     <input
-      v-model="searchQuery"
+      :value="searchQuery"
+      @input="handleInput"
       @focus="showDropdown = true"
-      @input="showDropdown = true"
-      @blur="handleInputBlur"
+      @blur="showDropdown = false"
       type="text"
       class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
       required
@@ -87,11 +95,11 @@ const handleInputBlur = () => {
     </label>
     <ul v-if="showDropdown && filteredBreeds.length" class="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 max-h-40 overflow-y-auto">
       <li
-        v-for="{ breed, count } in filteredBreeds"
+        v-for="{ breed } in filteredBreeds"
         :key="breed"
-        @click="selectBreed(breed)"
+        @mousedown.prevent="selectBreed(breed)"
         class="px-4 py-2 cursor-pointer hover:bg-gray-200">
-        {{ count }} | {{ breed }} 
+        {{ breed }}
       </li>
     </ul>
   </div>

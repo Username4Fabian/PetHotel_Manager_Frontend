@@ -14,20 +14,17 @@ const localDog = ref({ ...props.dog });
 watch(
   () => props.dog,
   (newDog) => {
-    console.log('Updating localDog:', newDog); // Debugging
     localDog.value = { ...newDog };
   },
   { immediate: true, deep: true }
 );
 
 const closeOverlay = () => {
-  console.log('Closing overlay'); // Debugging
   showOverlay.value = false;
   emits('closeOverlay'); // Emit the closeOverlay event
 };
 
 const updateDog = (updatedDog) => {
-  console.log('Updating dog in EditDogOverlay:', updatedDog); // Debugging
   localDog.value = { ...updatedDog }; // Update localDog immediately
   emits('updateDog', updatedDog);
   closeOverlay(); // Close the overlay after updating

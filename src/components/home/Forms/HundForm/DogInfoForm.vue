@@ -11,13 +11,13 @@ defineProps({
     type: Array,
     required: true,
   },
+  breeds: {
+    type: Array,
+    required: true,
+  },
   showOwnerField: {
     type: Boolean,
     default: true,
-  },
-  dogs: {
-    type: Array,
-    required: true,
   },
 });
 
@@ -25,6 +25,11 @@ const emit = defineEmits(['update:dogData']);
 
 const updateField = (key, value) => {
   emit('update:dogData', key, value);
+};
+
+// Handle breed updates from BreedSearch
+const handleBreedUpdate = (value) => {
+  updateField('rasse', value); // Update the rasse field in dogData
 };
 </script>
 
@@ -47,22 +52,23 @@ const updateField = (key, value) => {
       <div class="relative">
         <!-- BreedSearch Component -->
         <BreedSearch
-          :dogs="dogs"
-          :selectedBreed="dogData.rasse" 
-          @selectBreed="(breed) => updateField('rasse', breed)"
+          :selectedBreed="dogData.rasse"
+          @update:modelValue="handleBreedUpdate"
         />
       </div>
       <div class="relative">
-        <input
-          :value="dogData.passNr"
-          @input="updateField('passNr', $event.target.value)"
-          type="text"
-          class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <label class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 pointer-events-none">
-          Impfpass Nummer
-        </label>
-      </div>
+      <input
+        :value="dogData.passNr"
+        @input="updateField('passNr', $event.target.value)"
+        type="text"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      <label class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 pointer-events-none">
+        Impfpass Nummer
+      </label>
+    </div>
       <div class="relative">
         <input
           :value="dogData.chipNr"

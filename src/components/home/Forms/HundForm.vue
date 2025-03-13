@@ -33,6 +33,7 @@ const props = defineProps({
 const dogData = ref({ ...props.initialData });
 const customers = ref([]);
 const dogs = ref([]); // Add dogs ref
+const breeds = ref([]); // Add breeds ref
 const imageFile = ref(null);
 
 const emits = defineEmits(['show-toast', 'addDog', 'updateDog', 'closeOverlay']);
@@ -63,6 +64,22 @@ const fetchInitialData = async () => {
     dogs.value = fetchedDogs;
     localStorage.setItem('dogs', JSON.stringify(dogs.value));
     localStorage.setItem('dogs_lastFetchTime', now.toString());
+  }
+
+  // Fetch breeds data
+  const cachedBreeds = localStorage.getItem('breeds');
+  const lastFetchTimeBreeds = localStorage.getItem('breeds_lastFetchTime');
+  if (cachedBreeds && lastFetchTimeBreeds && (now - lastFetchTimeBreeds < fetchInterval)) {
+    breeds.value = JSON.parse(cachedBreeds);
+  } else {
+    try {
+      const response = await axios.get('/api/dog/GetAllBreeds');
+      breeds.value = response.data.map(breed => ({ breed }));
+      localStorage.setItem('breeds', JSON.stringify(breeds.value));
+      localStorage.setItem('breeds_lastFetchTime', now.toString());
+    } catch (error) {
+      console.error('Error fetching breeds:', error);
+    }
   }
 };
 
@@ -142,6 +159,12 @@ const handleSubmit = async () => {
       const dogs = JSON.parse(localStorage.getItem('dogs')) || [];
       dogs.push(response.data.dog);
       localStorage.setItem('dogs', JSON.stringify(dogs));
+
+      // Update local storage with the new breed if it doesn't exist
+      if (!breeds.value.some(b => b.breed === dogData.value.rasse)) {
+        breeds.value.push({ breed: dogData.value.rasse });
+        localStorage.setItem('breeds', JSON.stringify(breeds.value));
+      }
     }
 
     // Emit success message and close the form
@@ -176,7 +199,8 @@ const updateDogData = (key, value) => {
       <DogInfoForm
         :dogData="dogData"
         :customers="customers"
-        :dogs="dogs" 
+        :dogs="dogs"
+        :breeds="breeds"
         :showOwnerField="showOwnerField"
         @update:dogData="updateDogData"
       />
