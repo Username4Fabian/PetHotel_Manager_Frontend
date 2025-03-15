@@ -25,6 +25,11 @@ const router = createRouter({
       component: () => import('../views/DogOverview.vue'),
     },
     {
+      path: '/appointment-overview',
+      name: 'appointment-overview',
+      component: () => import('../views/AppointmentOverview.vue'),
+    },
+    {
       path: '/login',
       name: 'login',
       component: () => import('../views/Login.vue'),
