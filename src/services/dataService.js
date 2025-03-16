@@ -27,3 +27,7 @@ export const fetchCustomers = async () => {
 export const fetchDogs = async () => {
   return fetchData('/api/dog/GetAllDogs', 'dogs', 2 * 60 * 1000);
 };
+
+export const fetchAppointments = async () => {
+  return fetchData('/api/appointment/getAllAppointments', 'appointments', 2 * 60 * 1000);
+}
