@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch } from 'vue';
+import axios from 'axios';
 import TerminForm from '@/components/home/Forms/TerminForm.vue';
-import { defineEmits } from 'vue';
 
 const props = defineProps({
   appointment: Object,
@@ -21,18 +21,49 @@ watch(
 
 const closeOverlay = () => {
   showOverlay.value = false;
-  emits('closeOverlay'); // Emit the closeOverlay event
+  emits('closeOverlay');
 };
 
-const updateAppointment = (updatedAppointment) => {
-  localAppointment.value = { ...updatedAppointment }; // Update localAppointment immediately
+const updateAppointment = async (updatedAppointment) => {
+  // Optimistic UI update
+  const originalAppointment = { ...localAppointment.value };
+  localAppointment.value = { ...updatedAppointment };
+
+  // Update local storage immediately
+  const appointments = JSON.parse(localStorage.getItem('appointments')) || [];
+  const index = appointments.findIndex(a => a.id === updatedAppointment.id);
+  if (index !== -1) {
+    appointments[index] = { ...updatedAppointment };
+  } else {
+    appointments.push(updatedAppointment);
+  }
+  localStorage.setItem('appointments', JSON.stringify(appointments));
+
+  // Emit the updateAppointment event immediately
   emits('updateAppointment', updatedAppointment);
-  closeOverlay(); // Close the overlay after updating
-};
 
-const handleUploadSuccess = () => {
-  emits('show-toast', 'Termin erfolgreich hochgeladen!');
+  // Close the overlay immediately
   closeOverlay();
+
+  try {
+    const response = await axios.post('/api/appointment/updateAppointment', updatedAppointment);
+    localAppointment.value = { ...response.data }; // Update localAppointment with the response data
+    emits('updateAppointment', response.data);
+    emits('show-toast', 'Termin erfolgreich aktualisiert!');
+  } catch (error) {
+    console.error('Error updating appointment:', error);
+    emits('show-toast', 'Fehler beim Aktualisieren des Termins!');
+    // Revert optimistic update in case of error
+    localAppointment.value = { ...originalAppointment };
+    // Revert local storage update
+    const appointments = JSON.parse(localStorage.getItem('appointments')) || [];
+    const index = appointments.findIndex(a => a.id === originalAppointment.id);
+    if (index !== -1) {
+      appointments[index] = { ...originalAppointment };
+    }
+    localStorage.setItem('appointments', JSON.stringify(appointments));
+    emits('updateAppointment', originalAppointment);
+  }
 };
 </script>
 
@@ -43,7 +74,7 @@ const handleUploadSuccess = () => {
         &times;
       </button>
       <h2 class="text-xl font-bold mb-4">Termin bearbeiten</h2>
-      <TerminForm :initialAppointment="localAppointment" @updateAppointment="updateAppointment" @show-toast="handleUploadSuccess" />
+      <TerminForm :initialAppointment="localAppointment" @updateAppointment="updateAppointment" @show-toast="emits('show-toast', $event)" />
     </div>
   </div>
 </template>
