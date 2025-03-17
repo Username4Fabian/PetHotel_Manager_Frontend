@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import TerminForm from '@/components/home/Forms/TerminForm.vue';
-import { defineProps, defineEmits } from 'vue';
+import { defineEmits } from 'vue';
 
 const props = defineProps({
   customers: {

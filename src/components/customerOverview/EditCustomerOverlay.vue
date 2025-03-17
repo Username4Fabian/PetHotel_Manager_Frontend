@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import KundenForm from '@/components/home/Forms/KundenForm.vue';
-import { defineProps, defineEmits } from 'vue';
+import { defineEmits } from 'vue';
 
 const props = defineProps({
   customer: Object,

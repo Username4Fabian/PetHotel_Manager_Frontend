@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch } from 'vue';
 import HundForm from '@/components/home/Forms/HundForm.vue';
-import { defineProps, defineEmits } from 'vue';
+import { defineEmits } from 'vue';
 
 const props = defineProps({
   dog: Object,

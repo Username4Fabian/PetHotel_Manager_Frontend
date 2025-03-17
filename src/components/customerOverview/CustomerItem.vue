@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { defineProps, defineEmits } from 'vue';
+import { defineEmits } from 'vue';
 import { useRouter } from 'vue-router';
 import EditCustomerOverlay from './EditCustomerOverlay.vue';
 
