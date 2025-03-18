@@ -181,6 +181,7 @@ const handleCustomerSelect = (customer) => {
           :customers="customers" 
           :initialCustomer="appointmentData.kunde" 
           @selectCustomer="handleCustomerSelect" 
+          :disabled="!!props.initialAppointment"
         />
       </div>
 

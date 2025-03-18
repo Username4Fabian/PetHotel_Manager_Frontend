@@ -5,6 +5,10 @@ import '@/assets/styles/forms.css';
 const props = defineProps({
   customers: Array,
   initialCustomer: Object,
+  disabled: {
+    type: Boolean,
+    default: false, 
+  },
 });
 
 const emit = defineEmits(['selectCustomer']);
@@ -17,11 +21,9 @@ watch(
   () => props.initialCustomer,
   (newCustomer) => {
     if (newCustomer) {
-      console.log('Initial customer set:', newCustomer);
       const trimmedFirstName = newCustomer.firstName ? newCustomer.firstName.trim() : '';
       const trimmedLastName = newCustomer.lastName ? newCustomer.lastName.trim() : '';
       searchQuery.value = trimmedFirstName ? `${trimmedFirstName} ${trimmedLastName}` : trimmedLastName;
-      console.log('Emitting selectCustomer event:', newCustomer);
       emit('selectCustomer', newCustomer); // Emit the selectCustomer event
     }
   },
@@ -44,7 +46,7 @@ const filteredCustomers = computed(() => {
 });
 
 const selectCustomer = (customer) => {
-  console.log('Customer selected:', customer);
+  if (props.disabled) return; // Prevent selection if disabled
   const trimmedFirstName = customer.firstName ? customer.firstName.trim() : '';
   const trimmedLastName = customer.lastName ? customer.lastName.trim() : '';
   emit('selectCustomer', customer);
@@ -57,22 +59,28 @@ const selectCustomer = (customer) => {
   <div class="relative">
     <input
       v-model="searchQuery"
-      @focus="showDropdown = true"
-      @input="showDropdown = true"
+      @focus="!disabled && (showDropdown = true)"
+      @input="!disabled && (showDropdown = true)"
       type="text"
       class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+      :class="{ 'cursor-not-allowed opacity-50': disabled }"
+      :disabled="disabled"
       required
     />
     <label class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 pointer-events-none">
       Besitzer suchen
     </label>
-    <ul v-if="showDropdown && filteredCustomers.length" class="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 max-h-40 overflow-y-auto">
+    <ul
+      v-if="!disabled && showDropdown && filteredCustomers.length"
+      class="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 max-h-40 overflow-y-auto"
+    >
       <li
         v-for="customer in filteredCustomers"
         :key="customer.id"
         @click="selectCustomer(customer)"
-        class="px-4 py-2 cursor-pointer hover:bg-gray-200">
-        {{customer.id}} | {{ customer.firstName ? customer.firstName.trim() + ' ' : '' }}{{ customer.lastName.trim() }}
+        class="px-4 py-2 cursor-pointer hover:bg-gray-200"
+      >
+        {{ customer.id }} | {{ customer.firstName ? customer.firstName.trim() + ' ' : '' }}{{ customer.lastName.trim() }}
       </li>
     </ul>
   </div>
