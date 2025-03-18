@@ -29,18 +29,22 @@ const updateAppointment = async (updatedAppointment) => {
   const originalAppointment = { ...localAppointment.value };
   localAppointment.value = { ...updatedAppointment };
 
+  // Update the `dogs` array based on `dogIds`
+  const allDogs = JSON.parse(localStorage.getItem('dogs')) || [];
+  localAppointment.value.dogs = allDogs.filter(dog => updatedAppointment.dogIds.includes(dog.id));
+
   // Update local storage immediately
   const appointments = JSON.parse(localStorage.getItem('appointments')) || [];
   const index = appointments.findIndex(a => a.id === updatedAppointment.id);
   if (index !== -1) {
-    appointments[index] = { ...updatedAppointment };
+    appointments[index] = { ...localAppointment.value };
   } else {
-    appointments.push(updatedAppointment);
+    appointments.push(localAppointment.value);
   }
   localStorage.setItem('appointments', JSON.stringify(appointments));
 
   // Emit the updateAppointment event immediately
-  emits('updateAppointment', updatedAppointment);
+  emits('updateAppointment', localAppointment.value);
 
   // Close the overlay immediately
   closeOverlay();

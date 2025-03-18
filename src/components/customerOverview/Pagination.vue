@@ -1,5 +1,5 @@
 <script setup>
-import { defineEmits, computed, ref, onMounted } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 
 const props = defineProps({
   currentPage: Number,
