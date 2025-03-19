@@ -26,6 +26,8 @@ const fetchInterval = 3 * 60 * 1000; // 3 minutes in milliseconds
 
 const route = useRoute();
 
+const dateSearchType = ref('datum');
+
 const fetchAppointmentsData = async () => {
   const cachedAppointments = localStorage.getItem('appointments');
   const lastFetchTimeAppointments = localStorage.getItem('appointments_lastFetchTime');
@@ -189,22 +191,62 @@ const filteredAppointments = computed(() => {
   if (!searchQuery.value) {
     return appointments.value;
   }
+
   return appointments.value.filter(appointment => {
-    if (searchProperty.value === 'all') {
-      return (
-        appointment.date_ankunft.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-        (appointment.kunde && appointment.kunde.firstName.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
-        (appointment.kunde && appointment.kunde.lastName.toLowerCase().includes(searchQuery.value.toLowerCase()))
-      );
-    } else if (searchProperty.value === 'ownerId') {
-      return String(appointment.kundeId) === searchQuery.value;
-    } else if (searchProperty.value === 'id') {
-      return String(appointment.id) === searchQuery.value;
-    } else {
-      return String(appointment[searchProperty.value]).toLowerCase().includes(searchQuery.value.toLowerCase());
+    const query = searchQuery.value.trim();
+
+    switch (searchProperty.value) {
+      case 'customerName':
+        const fullName = `${appointment.kunde?.firstName || ''} ${appointment.kunde?.lastName || ''}`.toLowerCase();
+        return fullName.includes(query.toLowerCase());
+
+      case 'date_ankunft':
+      case 'date_abfahrt':
+        const appointmentDate = searchProperty.value === 'date_ankunft'
+          ? new Date(appointment.date_ankunft)
+          : new Date(appointment.date_abfahrt);
+
+        // Extract day, month, and year from the appointment date
+        const appointmentDay = String(appointmentDate.getDate()).padStart(2, '0');
+        const appointmentMonth = String(appointmentDate.getMonth() + 1).padStart(2, '0');
+        const appointmentYear = String(appointmentDate.getFullYear());
+
+        // Match based on the selected dateSearchType
+        switch (dateSearchType.value) {
+          case 'datum':
+            // Match full date (DD.MM.YYYY)
+            const normalizedQuery = query.replace(/[.\-/]/g, ''); // Remove separators
+            const normalizedDate = `${appointmentDay}${appointmentMonth}${appointmentYear}`;
+            return normalizedDate === normalizedQuery;
+
+          case 'tag':
+            // Match day only
+            return appointmentDay === query.padStart(2, '0');
+
+          case 'monat':
+            // Match month only
+            return appointmentMonth === query.padStart(2, '0');
+
+          case 'jahr':
+            // Match year only
+            return appointmentYear === query;
+
+          default:
+            return false;
+        }
+
+      case 'bezahlt':
+        return (query.toLowerCase() === 'ja' && appointment.bezahlt) || (query.toLowerCase() === 'nein' && !appointment.bezahlt);
+
+      case 'id':
+        return String(appointment.id) === query;
+
+      default:
+        return false;
     }
   });
 });
+
 
 const paginatedAppointments = computed(() => {
   const start = (currentPage.value - 1) * appointmentsPerPage;
