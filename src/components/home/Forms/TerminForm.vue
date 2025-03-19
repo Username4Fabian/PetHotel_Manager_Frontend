@@ -29,7 +29,7 @@ const customers = ref([]);
 const dogs = ref([]);
 const selectedCustomerDogs = ref([]);
 
-const emits = defineEmits(['show-toast', 'updateAppointment']);
+const emits = defineEmits(['show-toast', 'updateAppointment', 'addAppointment']);
 
 // Fetch initial data (customers and dogs)
 const fetchInitialData = async () => {
@@ -118,7 +118,6 @@ watch(() => appointmentData.value.kundeId, (newCustomerId) => {
   }
 });
 
-// Handle form submission
 const handleSubmit = async () => {
   // Convert DD-MM-YYYY to YYYY-MM-DD for the backend
   const [ankunftDay, ankunftMonth, ankunftYear] = appointmentData.value.date_ankunft.split('-');
@@ -126,8 +125,9 @@ const handleSubmit = async () => {
 
   const formattedAppointmentData = {
     ...appointmentData.value,
-    date_ankunft: `${ankunftYear}-${ankunftMonth}-${ankunftDay}`,
-    date_abfahrt: `${abfahrtYear}-${abfahrtMonth}-${abfahrtDay}`,
+    date_ankunft: new Date(`${ankunftYear}-${ankunftMonth}-${ankunftDay}`).toISOString(), // Convert to ISO 8601
+    date_abfahrt: new Date(`${abfahrtYear}-${abfahrtMonth}-${abfahrtDay}`).toISOString(), // Convert to ISO 8601
+    dogIds: [...appointmentData.value.dogIds],
   };
 
   if (props.initialAppointment) {
@@ -143,7 +143,10 @@ const handleSubmit = async () => {
 
     try {
       const response = await axios.post('/api/appointment/createNewAppointment', formattedAppointmentData);
-      console.log('Appointment created:', response.data);
+
+      console.log('Emitting formatted appointment data:', formattedAppointmentData);
+      emits('addAppointment', formattedAppointmentData);
+      console.log('Appointment created:', formattedAppointmentData);
     } catch (error) {
       console.error('Error creating appointment:', error);
 

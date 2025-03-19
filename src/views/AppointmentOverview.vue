@@ -78,8 +78,12 @@ const fetchAppointmentsData = async () => {
 };
 
 const addAppointment = (newAppointment) => {
-  // Optimistically add the new appointment
+  console.log('addAppointment - Received Appointment:', newAppointment);
+  const allDogs = JSON.parse(localStorage.getItem('dogs')) || [];
+  newAppointment.dogs = allDogs.filter(dog => newAppointment.dogIds.includes(dog.id));
   appointments.value.push(newAppointment);
+  localStorage.setItem('appointments', JSON.stringify(appointments.value));
+
   toastMessage.value = 'Termin erfolgreich hinzugefügt!';
   showToast.value = true;
 

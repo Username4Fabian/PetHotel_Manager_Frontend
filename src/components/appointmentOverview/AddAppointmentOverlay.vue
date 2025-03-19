@@ -13,7 +13,7 @@ const props = defineProps({
   },
 });
 
-const emits = defineEmits(['closeOverlay', 'addAppointment', 'show-toast']);
+const emits = defineEmits(['closeOverlay', 'addAppointment', 'show-toast']); 
 const showOverlay = ref(true);
 
 const closeOverlay = () => {
@@ -21,12 +21,9 @@ const closeOverlay = () => {
   emits('closeOverlay');
 };
 
-const addAppointment = (newAppointment) => {
-  emits('addAppointment', newAppointment);
-  closeOverlay();
-};
-
-const handleUploadSuccess = () => {
+const handleUploadSuccess = (newAppointment) => {
+  emits('addAppointment', newAppointment); // Emit the event
+  console.log('handleUploadSuccess - New Appointment:', newAppointment);
   emits('show-toast', 'Termin erfolgreich erstellt!');
   closeOverlay();
 };
@@ -39,7 +36,8 @@ const handleUploadSuccess = () => {
         &times;
       </button>
       <h2 class="text-xl font-bold mb-4">Neuen Termin anlegen</h2>
-      <TerminForm :customers="customers" :dogs="dogs" @addAppointment="addAppointment" @show-toast="handleUploadSuccess" />
+      <!-- Pass handleUploadSuccess to TerminForm -->
+      <TerminForm :customers="customers" :dogs="dogs" @addAppointment="handleUploadSuccess" />
     </div>
   </div>
 </template>
