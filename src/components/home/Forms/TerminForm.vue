@@ -134,25 +134,24 @@ const handleSubmit = async () => {
     // Emit update event for editing
     emits('updateAppointment', formattedAppointmentData);
   } else {
-    // Emit toast notification immediately
-    emits('show-toast', 'Termin erfolgreich erstellt!');
+    // Emit add event for new appointment
+    emits('addAppointment', formattedAppointmentData);
+  }
 
-    // Close the form overlay immediately
-    const closeFormEvent = new CustomEvent('close-form');
-    window.dispatchEvent(closeFormEvent);
+  try {
+    const response = await axios.post(
+      props.initialAppointment
+        ? '/api/appointment/updateAppointment'
+        : '/api/appointment/createNewAppointment',
+      formattedAppointmentData
+    );
+    console.log('Appointment saved:', response.data);
 
-    try {
-      const response = await axios.post('/api/appointment/createNewAppointment', formattedAppointmentData);
-
-      console.log('Emitting formatted appointment data:', formattedAppointmentData);
-      emits('addAppointment', formattedAppointmentData);
-      console.log('Appointment created:', formattedAppointmentData);
-    } catch (error) {
-      console.error('Error creating appointment:', error);
-
-      // Emit an error toast notification
-      emits('show-toast', 'Fehler beim Erstellen des Termins!');
-    }
+    // Optionally update the appointment with the backend response (e.g., ID)
+    emits('updateAppointment', response.data);
+  } catch (error) {
+    console.error('Error saving appointment:', error);
+    emits('show-toast', 'Fehler beim Speichern des Termins!');
   }
 };
 

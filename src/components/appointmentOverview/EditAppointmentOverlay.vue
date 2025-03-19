@@ -78,7 +78,11 @@ const updateAppointment = async (updatedAppointment) => {
         &times;
       </button>
       <h2 class="text-xl font-bold mb-4">Termin bearbeiten</h2>
-      <TerminForm :initialAppointment="localAppointment" @updateAppointment="updateAppointment" @show-toast="emits('show-toast', $event)" />
+      <TerminForm
+        :initialAppointment="localAppointment"
+        @updateAppointment="updateAppointment"
+        @show-toast="emits('show-toast', $event)"
+      />
     </div>
   </div>
 </template>

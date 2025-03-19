@@ -79,9 +79,13 @@ const fetchAppointmentsData = async () => {
 
 const addAppointment = (newAppointment) => {
   console.log('addAppointment - Received Appointment:', newAppointment);
+
+  // Add the new appointment optimistically
   const allDogs = JSON.parse(localStorage.getItem('dogs')) || [];
   newAppointment.dogs = allDogs.filter(dog => newAppointment.dogIds.includes(dog.id));
   appointments.value.push(newAppointment);
+
+  // Update local storage immediately
   localStorage.setItem('appointments', JSON.stringify(appointments.value));
 
   toastMessage.value = 'Termin erfolgreich hinzugefügt!';
@@ -92,6 +96,19 @@ const addAppointment = (newAppointment) => {
   if (currentPage.value > totalPages) {
     currentPage.value = totalPages;
   }
+};
+
+const rollbackAppointment = (failedAppointment) => {
+  console.log('Rolling back appointment:', failedAppointment);
+
+  // Remove the failed appointment from the UI
+  appointments.value = appointments.value.filter(a => a !== failedAppointment);
+
+  // Update local storage
+  localStorage.setItem('appointments', JSON.stringify(appointments.value));
+
+  toastMessage.value = 'Fehler beim Erstellen des Termins. Änderungen wurden zurückgesetzt.';
+  showToast.value = true;
 };
 
 const handleAppointmentDeleted = async (deletedAppointment) => {
@@ -242,7 +259,15 @@ const lastPage = () => {
       @firstPage="firstPage"
       @lastPage="lastPage"
     />
-    <AddAppointmentOverlay v-if="showOverlay" :customers="customers" :dogs="dogs" @closeOverlay="showOverlay = false" @addAppointment="addAppointment" @show-toast="handleUploadSuccess" />
+    <AddAppointmentOverlay
+        v-if="showOverlay"
+        :customers="customers"
+        :dogs="dogs"
+        @closeOverlay="showOverlay = false"
+        @addAppointment="addAppointment"
+        @rollbackAppointment="rollbackAppointment"
+        @show-toast="handleUploadSuccess"
+      />
     <EditAppointmentOverlay v-if="showEditOverlay" :appointment="selectedAppointment" @closeOverlay="showEditOverlay = false" @updateAppointment="handleUpdateAppointment" />
     <Toast v-if="showToast" :message="toastMessage" @close="closeToast" />
   </div>
