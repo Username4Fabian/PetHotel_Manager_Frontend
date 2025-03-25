@@ -5,7 +5,7 @@ const props = defineProps({
   searchQuery: String,
   searchProperty: {
     type: String,
-    default: 'date',
+    default: 'date_ankunft',
   },
   showAddButton: {
     type: Boolean,
@@ -19,11 +19,19 @@ const clearSearch = () => {
   emits('update:searchQuery', '');
 };
 
+// Dynamically set placeholder text based on the selected search property
 const placeholderText = computed(() => {
-  if (props.searchProperty === 'date_ankunft' || props.searchProperty === 'date_abfahrt') {
-    return 'z.B. 17 (Tag) oder 03 (Monat) oder 2025 (Jahr) oder 17.03.2025';
+  switch (props.searchProperty) {
+    case 'date_ankunft':
+    case 'date_abfahrt':
+      return 'z.B. 17 (Tag) oder 03 (Monat) oder 2025 (Jahr) oder 17.03.2025';
+    case 'dogName':
+      return 'Hundename suchen...';
+    case 'kundennummer':
+      return 'Kundennummer suchen...';
+    default:
+      return 'Termin suchen...';
   }
-  return 'Termin suchen...';
 });
 </script>
 
@@ -66,10 +74,12 @@ const placeholderText = computed(() => {
       style="height: 40px; width: 150px;"
     >
       <option value="customerName">Kundenname</option>
+      <option value="kundennummer">Kundennummer</option>
+      <option value="dogName">Hundename</option>
+      <option value="id">Terminnummer</option>
       <option value="date_ankunft">Ankunft</option>
       <option value="date_abfahrt">Abfahrt</option>
       <option value="bezahlt">Bezahlt</option>
-      <option value="id">Terminnummer</option>
     </select>
 
     <button

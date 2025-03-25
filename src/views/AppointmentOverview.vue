@@ -14,7 +14,7 @@ const appointments = ref([]);
 const customers = ref([]);
 const dogs = ref([]);
 const searchQuery = ref('');
-const searchProperty = ref('date_ankunft'); // Default to Ankunft
+const searchProperty = ref('customerName');
 const currentPage = ref(1);
 const appointmentsPerPage = 10;
 const showOverlay = ref(false);
@@ -27,10 +27,11 @@ const fetchInterval = 3 * 60 * 1000; // 3 minutes in milliseconds
 const route = useRoute();
 
 const fetchAppointmentsData = async () => {
-  const cachedAppointments = localStorage.getItem('appointments');
-  const lastFetchTimeAppointments = localStorage.getItem('appointments_lastFetchTime');
   const now = Date.now();
 
+  // Fetch appointments with caching
+  const cachedAppointments = localStorage.getItem('appointments');
+  const lastFetchTimeAppointments = localStorage.getItem('appointments_lastFetchTime');
   if (cachedAppointments && lastFetchTimeAppointments && (now - lastFetchTimeAppointments < fetchInterval)) {
     appointments.value = JSON.parse(cachedAppointments);
   } else {
@@ -40,13 +41,13 @@ const fetchAppointmentsData = async () => {
       localStorage.setItem('appointments', JSON.stringify(appointments.value));
       localStorage.setItem('appointments_lastFetchTime', now.toString());
     } catch (error) {
-      console.error('Fehler beim Abrufen der Termine:', error);
+      console.error('Error fetching appointments:', error);
     }
   }
 
+  // Fetch customers with caching
   const cachedCustomers = localStorage.getItem('customers');
   const lastFetchTimeCustomers = localStorage.getItem('customers_lastFetchTime');
-
   if (cachedCustomers && lastFetchTimeCustomers && (now - lastFetchTimeCustomers < fetchInterval)) {
     customers.value = JSON.parse(cachedCustomers);
   } else {
@@ -56,13 +57,13 @@ const fetchAppointmentsData = async () => {
       localStorage.setItem('customers', JSON.stringify(customers.value));
       localStorage.setItem('customers_lastFetchTime', now.toString());
     } catch (error) {
-      console.error('Fehler beim Abrufen der Kunden:', error);
+      console.error('Error fetching customers:', error);
     }
   }
 
+  // Fetch dogs with caching
   const cachedDogs = localStorage.getItem('dogs');
   const lastFetchTimeDogs = localStorage.getItem('dogs_lastFetchTime');
-
   if (cachedDogs && lastFetchTimeDogs && (now - lastFetchTimeDogs < fetchInterval)) {
     dogs.value = JSON.parse(cachedDogs);
   } else {
@@ -72,7 +73,7 @@ const fetchAppointmentsData = async () => {
       localStorage.setItem('dogs', JSON.stringify(dogs.value));
       localStorage.setItem('dogs_lastFetchTime', now.toString());
     } catch (error) {
-      console.error('Fehler beim Abrufen der Hunde:', error);
+      console.error('Error fetching dogs:', error);
     }
   }
 };
@@ -82,9 +83,10 @@ const addAppointment = (newAppointment) => {
   newAppointment.dogs = allDogs.filter(dog => newAppointment.dogIds.includes(dog.id));
   appointments.value.push(newAppointment);
   localStorage.setItem('appointments', JSON.stringify(appointments.value));
-  toastMessage.value = 'Termin erfolgreich hinzugefügt!';
+  toastMessage.value = 'Appointment successfully added!';
   showToast.value = true;
 
+  // Adjust current page if the total number of pages changes
   const totalPages = Math.ceil(appointments.value.length / appointmentsPerPage);
   if (currentPage.value > totalPages) {
     currentPage.value = totalPages;
@@ -94,7 +96,7 @@ const addAppointment = (newAppointment) => {
 const rollbackAppointment = (failedAppointment) => {
   appointments.value = appointments.value.filter(a => a !== failedAppointment);
   localStorage.setItem('appointments', JSON.stringify(appointments.value));
-  toastMessage.value = 'Fehler beim Erstellen des Termins. Änderungen wurden zurückgesetzt.';
+  toastMessage.value = 'Error creating appointment. Changes have been reverted.';
   showToast.value = true;
 };
 
@@ -102,9 +104,10 @@ const handleAppointmentDeleted = async (deletedAppointment) => {
   const originalAppointments = [...appointments.value];
   appointments.value = appointments.value.filter(a => a.id !== deletedAppointment.id);
   localStorage.setItem('appointments', JSON.stringify(appointments.value));
-  toastMessage.value = 'Termin erfolgreich gelöscht!';
+  toastMessage.value = 'Appointment successfully deleted!';
   showToast.value = true;
 
+  // Adjust current page if the total number of pages changes
   const totalPages = Math.ceil(appointments.value.length / appointmentsPerPage);
   if (currentPage.value > totalPages) {
     currentPage.value = totalPages;
@@ -113,10 +116,10 @@ const handleAppointmentDeleted = async (deletedAppointment) => {
   try {
     await axios.delete(`/api/appointment/DeleteAppointment/${deletedAppointment.id}`);
   } catch (error) {
-    console.error('Fehler beim Löschen des Termins:', error);
+    console.error('Error deleting appointment:', error);
     appointments.value = originalAppointments;
     localStorage.setItem('appointments', JSON.stringify(appointments.value));
-    toastMessage.value = 'Fehler beim Löschen des Termins!';
+    toastMessage.value = 'Error deleting appointment!';
     showToast.value = true;
   }
 };
@@ -130,7 +133,7 @@ const handleUpdateAppointment = (updatedAppointment) => {
       ...appointments.value.slice(index + 1)
     ];
     localStorage.setItem('appointments', JSON.stringify(appointments.value));
-    toastMessage.value = 'Termin erfolgreich aktualisiert!';
+    toastMessage.value = 'Appointment successfully updated!';
     showToast.value = true;
   }
   showEditOverlay.value = false;
@@ -158,10 +161,12 @@ onMounted(() => {
   fetchAppointmentsData();
 });
 
+// Reset to the first page when search query or property changes
 watch([searchQuery, searchProperty], () => {
   currentPage.value = 1;
 });
 
+// Handle route changes to pre-fill search query
 watch(route, () => {
   const ownerId = route.query.ownerId;
   if (ownerId) {
@@ -176,15 +181,32 @@ const filteredAppointments = computed(() => {
   }
 
   return appointments.value.filter(appointment => {
-    const query = searchQuery.value.trim();
+    const query = searchQuery.value.trim().toLowerCase();
 
     switch (searchProperty.value) {
-      case 'customerName':
-        const fullName = `${appointment.kunde?.firstName || ''} ${appointment.kunde?.lastName || ''}`.toLowerCase();
-        return fullName.includes(query.toLowerCase());
+      case 'customerName': {
+        const firstName = appointment.kunde?.firstName?.toLowerCase() || '';
+        const lastName = appointment.kunde?.lastName?.toLowerCase() || '';
+        const fullName = `${firstName} ${lastName}`;
+        const reverseName = `${lastName} ${firstName}`;
+        const queryParts = query.split(/\s+/).filter(part => part.length > 0);
+
+        return (
+          fullName === query ||
+          reverseName === query ||
+          lastName === query ||
+          (queryParts.length > 1 && queryParts.every(part => 
+            firstName.includes(part) || 
+            lastName.includes(part))) ||
+          (queryParts.length === 1 && (
+            firstName.includes(query) ||
+            lastName.includes(query)
+          ))
+        );
+      }
 
       case 'date_ankunft':
-      case 'date_abfahrt':
+      case 'date_abfahrt': {
         const dateString = searchProperty.value === 'date_ankunft'
           ? appointment.date_ankunft
           : appointment.date_abfahrt;
@@ -198,68 +220,55 @@ const filteredAppointments = computed(() => {
         const day = String(appointmentDate.getUTCDate()).padStart(2, '0');
         const month = String(appointmentDate.getUTCMonth() + 1).padStart(2, '0');
         const year = String(appointmentDate.getUTCFullYear());
-
-        // Normalize query by replacing all separators with dots
         const normalizedQuery = query.replace(/[\/\-]/g, '.');
-        
-        // Split into parts and filter out empty strings
         const queryParts = normalizedQuery.split('.').filter(part => part !== '');
-        
-        // Determine what parts we're searching for
+
         if (queryParts.length === 0) return false;
-        
-        // Case 1: Single number - could be day, month, or year
+
         if (queryParts.length === 1) {
           const num = queryParts[0].padStart(queryParts[0].length === 4 ? 4 : 2, '0');
-          
-          // Check if it matches day, month, or year
-          return day === num || 
-                 month === num || 
-                 year === num || 
-                 year.endsWith(num);
+          return day === num || month === num || year === num || year.endsWith(num);
         }
-        
-        // Case 2: Two numbers - could be day.month or month.year
+
         if (queryParts.length === 2) {
           const part1 = queryParts[0].padStart(2, '0');
           const part2 = queryParts[1].padStart(2, '0');
-          
-          // Check day.month
           if (day === part1 && month === part2) return true;
-          
-          // Check month.year (if part2 is 4 digits)
           if (queryParts[1].length === 4) {
             return month === part1 && year === queryParts[1];
           }
-          
-          // Check month.year (if part2 is 2 digits)
           return month === part1 && year.endsWith(part2);
         }
-        
-        // Case 3: Full date (3 parts)
+
         if (queryParts.length >= 3) {
           const queryDay = queryParts[0].padStart(2, '0');
           const queryMonth = queryParts[1].padStart(2, '0');
           let queryYear = queryParts[2];
-          
-          // Handle 2-digit year
           if (queryYear.length === 2) {
-            queryYear = `20${queryYear}`; // Assuming 21st century
+            queryYear = `20${queryYear}`;
           }
-          
-          return day === queryDay && 
-                 month === queryMonth && 
-                 year === queryYear;
+          return day === queryDay && month === queryMonth && year === queryYear;
         }
-        
-        return false;
 
-      case 'bezahlt':
-        return (query.toLowerCase() === 'ja' && appointment.bezahlt) || 
-               (query.toLowerCase() === 'nein' && !appointment.bezahlt);
+        return false;
+      }
+
+      case 'dogName':
+        return appointment.dogs?.some(dog => 
+          dog.name.toLowerCase().includes(query)
+        );
+
+      case 'kundennummer':
+        return appointment.dogs?.some(dog => 
+          String(dog.downer?.id) === query
+        );
 
       case 'id':
         return String(appointment.id) === query;
+
+      case 'bezahlt':
+        return (query === 'ja' && appointment.bezahlt) || 
+               (query === 'nein' && !appointment.bezahlt);
 
       default:
         return false;
