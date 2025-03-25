@@ -309,7 +309,7 @@ const lastPage = () => {
 
 <template>
   <div class="container mx-auto p-4">
-    <h1 class="text-2xl md:text-4xl font-bold mb-4">Terminübersicht</h1>
+    <h1 class="text-xl md:text-4xl font-bold mb-4 text-center md:text-left">Terminübersicht</h1>
     <AppointmentSearchBar
       v-model:searchQuery="searchQuery"
       v-model:searchProperty="searchProperty"
@@ -318,12 +318,12 @@ const lastPage = () => {
     />
     <ul class="space-y-2">
       <li v-for="appointment in paginatedAppointments" :key="appointment.id" class="mb-2">
-        <AppointmentItem 
-          :appointment="appointment" 
-          actionType="delete" 
-          @appointmentDeleted="handleAppointmentDeleted" 
-          @appointmentUpdated="handleUpdateAppointment" 
-          @editAppointment="editAppointment" 
+        <AppointmentItem
+          :appointment="appointment"
+          actionType="delete"
+          @appointmentDeleted="handleAppointmentDeleted"
+          @appointmentUpdated="handleUpdateAppointment"
+          @editAppointment="editAppointment"
         />
       </li>
     </ul>
@@ -344,22 +344,18 @@ const lastPage = () => {
       @rollbackAppointment="rollbackAppointment"
       @show-toast="handleUploadSuccess"
     />
-    <EditAppointmentOverlay 
-      v-if="showEditOverlay" 
-      :appointment="selectedAppointment" 
-      @closeOverlay="showEditOverlay = false" 
-      @updateAppointment="handleUpdateAppointment" 
+    <EditAppointmentOverlay
+      v-if="showEditOverlay"
+      :appointment="selectedAppointment"
+      @closeOverlay="showEditOverlay = false"
+      @updateAppointment="handleUpdateAppointment"
     />
-    <Toast 
-      v-if="showToast" 
-      :message="toastMessage" 
-      @close="closeToast" 
-    />
+    <Toast v-if="showToast" :message="toastMessage" @close="closeToast" />
   </div>
 </template>
 
 <style scoped>
 .container {
-  max-width: 1200px;
+  max-width: 100%;
 }
 </style>

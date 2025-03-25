@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 
 const props = defineProps({
   searchQuery: String,
@@ -19,7 +19,6 @@ const clearSearch = () => {
   emits('update:searchQuery', '');
 };
 
-// Dynamically set placeholder text based on the selected search property
 const placeholderText = computed(() => {
   switch (props.searchProperty) {
     case 'date_ankunft':
@@ -33,10 +32,17 @@ const placeholderText = computed(() => {
       return 'Termin suchen...';
   }
 });
+
+watch(
+  () => props.searchProperty,
+  (newProperty) => {
+    emits('update:searchQuery', '');
+  }
+);
 </script>
 
 <template>
-  <div class="flex items-center mb-4">
+  <div class="flex flex-col md:flex-row items-center mb-4 space-y-2 md:space-y-0 md:space-x-2">
     <div class="relative w-full">
       <template v-if="searchProperty === 'bezahlt'">
         <select
@@ -44,7 +50,7 @@ const placeholderText = computed(() => {
           @change="$emit('update:searchQuery', $event.target.value)"
           class="p-2 border border-gray-300 rounded w-full"
         >
-          <option value="">Bezahlt (Alle)</option>
+          <option value="">Alle</option>
           <option value="ja">Ja</option>
           <option value="nein">Nein</option>
         </select>
@@ -70,8 +76,7 @@ const placeholderText = computed(() => {
     <select
       :value="searchProperty"
       @change="$emit('update:searchProperty', $event.target.value)"
-      class="ml-2 p-2 border border-gray-300 rounded"
-      style="height: 40px; width: 150px;"
+      class="p-2 border border-gray-300 rounded w-full md:w-auto"
     >
       <option value="customerName">Kundenname</option>
       <option value="kundennummer">Kundennummer</option>
@@ -85,7 +90,7 @@ const placeholderText = computed(() => {
     <button
       v-if="showAddButton"
       @click="$emit('showOverlay')"
-      class="ml-2 px-4 py-0.5 bg-blue-500 hover:bg-blue-700 text-white rounded self-stretch hover:cursor-pointer hover:scale-102"
+      class="px-4 py-2 bg-blue-500 hover:bg-blue-700 text-white rounded w-full md:w-auto"
     >
       Termin hinzufügen
     </button>

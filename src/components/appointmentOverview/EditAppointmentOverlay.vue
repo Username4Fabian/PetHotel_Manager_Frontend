@@ -25,15 +25,11 @@ const closeOverlay = () => {
 };
 
 const updateAppointment = async (updatedAppointment) => {
-  // Optimistic UI update
   const originalAppointment = { ...localAppointment.value };
   localAppointment.value = { ...updatedAppointment };
-
-  // Update the `dogs` array based on `dogIds`
   const allDogs = JSON.parse(localStorage.getItem('dogs')) || [];
   localAppointment.value.dogs = allDogs.filter(dog => updatedAppointment.dogIds.includes(dog.id));
 
-  // Update local storage immediately
   const appointments = JSON.parse(localStorage.getItem('appointments')) || [];
   const index = appointments.findIndex(a => a.id === updatedAppointment.id);
   if (index !== -1) {
@@ -43,10 +39,7 @@ const updateAppointment = async (updatedAppointment) => {
   }
   localStorage.setItem('appointments', JSON.stringify(appointments));
 
-  // Emit the updateAppointment event immediately
   emits('updateAppointment', localAppointment.value);
-
-  // Close the overlay immediately
   closeOverlay();
 
   try {
@@ -57,9 +50,7 @@ const updateAppointment = async (updatedAppointment) => {
   } catch (error) {
     console.error('Error updating appointment:', error);
     emits('show-toast', 'Fehler beim Aktualisieren des Termins!');
-    // Revert optimistic update in case of error
     localAppointment.value = { ...originalAppointment };
-    // Revert local storage update
     const appointments = JSON.parse(localStorage.getItem('appointments')) || [];
     const index = appointments.findIndex(a => a.id === originalAppointment.id);
     if (index !== -1) {
@@ -72,17 +63,23 @@ const updateAppointment = async (updatedAppointment) => {
 </script>
 
 <template>
-  <div v-if="showOverlay" class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50">
-    <div class="relative w-full max-w-lg p-4 bg-white rounded shadow-lg max-h-full overflow-y-auto">
-      <button @click="closeOverlay" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-4xl hover:cursor-pointer hover:scale-102">
+  <div
+    v-if="showOverlay"
+    class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50 p-4">
+    <div
+      class="relative w-full max-w-lg p-4 bg-white rounded shadow-lg max-h-full overflow-y-auto">
+      <button
+        @click="closeOverlay"
+        class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-4xl hover:cursor-pointer hover:scale-102">
         &times;
       </button>
-      <h2 class="text-xl font-bold mb-4">Termin bearbeiten</h2>
+      <h2 class="text-lg md:text-xl font-bold mb-4 text-center">
+        Termin bearbeiten
+      </h2>
       <TerminForm
         :initialAppointment="localAppointment"
         @updateAppointment="updateAppointment"
-        @show-toast="emits('show-toast', $event)"
-      />
+        @show-toast="emits('show-toast', $event)"/>
     </div>
   </div>
 </template>

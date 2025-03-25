@@ -52,24 +52,41 @@ const formatTime = (timeString) => {
 </script>
 
 <template>
-  <div class="p-4 bg-white shadow-md rounded-lg transition-all duration-300 hover:shadow-lg cursor-pointer" @click="toggleDetails">
-    <div class="flex justify-between items-center">
-      <div>
-        <p class="text-sm text-gray-600"><strong>Kunde: </strong> {{ appointment.kunde?.firstName }} {{ appointment.kunde?.lastName }}</p>
-        <p class="text-sm text-gray-600"><strong>Hunde: </strong> {{ appointment.dogs.map(dog => dog.name).join(', ') }}</p>
-        <p class="text-sm text-gray-600"><strong>Ankunft: </strong> {{ formatDate(appointment.date_ankunft) }} {{ formatTime(appointment.time_ankunft) }}</p>
-        <p class="text-sm text-gray-600"><strong>Abfahrt: </strong> {{ formatDate(appointment.date_abfahrt) }} {{ formatTime(appointment.time_abfahrt) }}</p>
+  <div
+    class="p-4 bg-white shadow-md rounded-lg transition-all duration-300 hover:shadow-lg cursor-pointer"
+    @click="toggleDetails">
+    <!-- Main Info Section -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+      <div class="flex flex-col mb-4 md:mb-0">
+        <h2 class="text-lg md:text-xl font-semibold text-gray-800">
+          {{ appointment.kunde?.firstName }} {{ appointment.kunde?.lastName }}
+        </h2>
+        <p class="text-sm text-gray-600">
+          <strong>Hunde: </strong>
+          <span v-if="appointment.dogs.length">
+            {{ appointment.dogs.map(dog => dog.name).join(', ') }}
+          </span>
+          <span v-else>---</span>
+        </p>
+        <p class="text-sm text-gray-600">
+          <strong>Ankunft: </strong> {{ formatDate(appointment.date_ankunft) }} {{ formatTime(appointment.time_ankunft) }}
+        </p>
+        <p class="text-sm text-gray-600">
+          <strong>Abfahrt: </strong> {{ formatDate(appointment.date_abfahrt) }} {{ formatTime(appointment.time_abfahrt) }}
+        </p>
       </div>
-      <div class="flex space-x-2">
+
+      <!-- Action Buttons -->
+      <div class="flex space-x-4 mt-4 md:mt-0 justify-end w-full md:w-auto">
         <button
           @click.stop="emits('editAppointment', appointment)"
-          class="text-gray-500 hover:text-blue-600 transition-colors duration-200 text-3xl hover:cursor-pointer mr-10">
+          class="text-gray-500 hover:text-red-600 transition-colors duration-200 text-3xl md:text-3xl hover:cursor-pointer p-2 rounded-full">
           <i class="fas fa-edit"></i>
         </button>
         <button
           v-if="actionType === 'delete'"
           @click.stop="confirmDeleteAppointment"
-          class="text-gray-500 hover:text-red-600 transition-colors duration-200 text-3xl hover:cursor-pointer mr-5">
+          class="text-gray-500 hover:text-red-600 transition-colors duration-200 text-3xl md:text-3xl hover:cursor-pointer p-2 rounded-full">
           <i class="fas fa-trash-alt"></i>
         </button>
       </div>
@@ -79,11 +96,10 @@ const formatTime = (timeString) => {
     <div class="flex justify-center mt-2">
       <i
         class="fas text-gray-500 transition-transform duration-300"
-        :class="showDetails ? 'fa-chevron-up' : 'fa-chevron-down'">
-      </i>
+        :class="showDetails ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
     </div>
 
-    <!-- Details section -->
+    <!-- Details Section -->
     <div v-if="showDetails" class="text-gray-700 mt-4 space-y-2">
       <h3 class="text-lg font-semibold text-gray-800">Weitere Informationen</h3>
       <p class="text-sm text-gray-600"><strong>Notizen: </strong> {{ appointment.anmerkung || '---' }}</p>
