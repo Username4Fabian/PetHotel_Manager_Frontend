@@ -14,7 +14,7 @@ const appointments = ref([]);
 const customers = ref([]);
 const dogs = ref([]);
 const searchQuery = ref('');
-const searchProperty = ref('date'); // Default to 'date'
+const searchProperty = ref('date_ankunft'); // Default to Ankunft
 const currentPage = ref(1);
 const appointmentsPerPage = 10;
 const showOverlay = ref(false);
@@ -25,8 +25,6 @@ const selectedAppointment = ref(null);
 const fetchInterval = 3 * 60 * 1000; // 3 minutes in milliseconds
 
 const route = useRoute();
-
-const dateSearchType = ref('datum');
 
 const fetchAppointmentsData = async () => {
   const cachedAppointments = localStorage.getItem('appointments');
@@ -80,20 +78,13 @@ const fetchAppointmentsData = async () => {
 };
 
 const addAppointment = (newAppointment) => {
-  console.log('addAppointment - Received Appointment:', newAppointment);
-
-  // Add the new appointment optimistically
   const allDogs = JSON.parse(localStorage.getItem('dogs')) || [];
   newAppointment.dogs = allDogs.filter(dog => newAppointment.dogIds.includes(dog.id));
   appointments.value.push(newAppointment);
-
-  // Update local storage immediately
   localStorage.setItem('appointments', JSON.stringify(appointments.value));
-
   toastMessage.value = 'Termin erfolgreich hinzugefügt!';
   showToast.value = true;
 
-  // Update pagination
   const totalPages = Math.ceil(appointments.value.length / appointmentsPerPage);
   if (currentPage.value > totalPages) {
     currentPage.value = totalPages;
@@ -101,14 +92,8 @@ const addAppointment = (newAppointment) => {
 };
 
 const rollbackAppointment = (failedAppointment) => {
-  console.log('Rolling back appointment:', failedAppointment);
-
-  // Remove the failed appointment from the UI
   appointments.value = appointments.value.filter(a => a !== failedAppointment);
-
-  // Update local storage
   localStorage.setItem('appointments', JSON.stringify(appointments.value));
-
   toastMessage.value = 'Fehler beim Erstellen des Termins. Änderungen wurden zurückgesetzt.';
   showToast.value = true;
 };
@@ -137,7 +122,6 @@ const handleAppointmentDeleted = async (deletedAppointment) => {
 };
 
 const handleUpdateAppointment = (updatedAppointment) => {
-  // Optimistically update the appointment
   const index = appointments.value.findIndex(a => a.id === updatedAppointment.id);
   if (index !== -1) {
     appointments.value = [
@@ -149,11 +133,10 @@ const handleUpdateAppointment = (updatedAppointment) => {
     toastMessage.value = 'Termin erfolgreich aktualisiert!';
     showToast.value = true;
   }
-  showEditOverlay.value = false; // Close the overlay
+  showEditOverlay.value = false;
 };
 
 const handleCloseOverlay = () => {
-  console.log('Overlay closed'); // Debugging
   showEditOverlay.value = false;
 };
 
@@ -168,7 +151,7 @@ const closeToast = () => {
 
 const editAppointment = (appointment) => {
   selectedAppointment.value = appointment;
-  showEditOverlay.value = true; // Open the overlay
+  showEditOverlay.value = true;
 };
 
 onMounted(() => {
@@ -202,41 +185,78 @@ const filteredAppointments = computed(() => {
 
       case 'date_ankunft':
       case 'date_abfahrt':
-        const appointmentDate = searchProperty.value === 'date_ankunft'
-          ? new Date(appointment.date_ankunft)
-          : new Date(appointment.date_abfahrt);
+        const dateString = searchProperty.value === 'date_ankunft'
+          ? appointment.date_ankunft
+          : appointment.date_abfahrt;
 
-        // Extract day, month, and year from the appointment date
-        const appointmentDay = String(appointmentDate.getDate()).padStart(2, '0');
-        const appointmentMonth = String(appointmentDate.getMonth() + 1).padStart(2, '0');
-        const appointmentYear = String(appointmentDate.getFullYear());
-
-        // Match based on the selected dateSearchType
-        switch (dateSearchType.value) {
-          case 'datum':
-            // Match full date (DD.MM.YYYY)
-            const normalizedQuery = query.replace(/[.\-/]/g, ''); // Remove separators
-            const normalizedDate = `${appointmentDay}${appointmentMonth}${appointmentYear}`;
-            return normalizedDate === normalizedQuery;
-
-          case 'tag':
-            // Match day only
-            return appointmentDay === query.padStart(2, '0');
-
-          case 'monat':
-            // Match month only
-            return appointmentMonth === query.padStart(2, '0');
-
-          case 'jahr':
-            // Match year only
-            return appointmentYear === query;
-
-          default:
-            return false;
+        const appointmentDate = new Date(dateString);
+        if (isNaN(appointmentDate.getTime())) {
+          console.error('Invalid date:', dateString);
+          return false;
         }
 
+        const day = String(appointmentDate.getUTCDate()).padStart(2, '0');
+        const month = String(appointmentDate.getUTCMonth() + 1).padStart(2, '0');
+        const year = String(appointmentDate.getUTCFullYear());
+
+        // Normalize query by replacing all separators with dots
+        const normalizedQuery = query.replace(/[\/\-]/g, '.');
+        
+        // Split into parts and filter out empty strings
+        const queryParts = normalizedQuery.split('.').filter(part => part !== '');
+        
+        // Determine what parts we're searching for
+        if (queryParts.length === 0) return false;
+        
+        // Case 1: Single number - could be day, month, or year
+        if (queryParts.length === 1) {
+          const num = queryParts[0].padStart(queryParts[0].length === 4 ? 4 : 2, '0');
+          
+          // Check if it matches day, month, or year
+          return day === num || 
+                 month === num || 
+                 year === num || 
+                 year.endsWith(num);
+        }
+        
+        // Case 2: Two numbers - could be day.month or month.year
+        if (queryParts.length === 2) {
+          const part1 = queryParts[0].padStart(2, '0');
+          const part2 = queryParts[1].padStart(2, '0');
+          
+          // Check day.month
+          if (day === part1 && month === part2) return true;
+          
+          // Check month.year (if part2 is 4 digits)
+          if (queryParts[1].length === 4) {
+            return month === part1 && year === queryParts[1];
+          }
+          
+          // Check month.year (if part2 is 2 digits)
+          return month === part1 && year.endsWith(part2);
+        }
+        
+        // Case 3: Full date (3 parts)
+        if (queryParts.length >= 3) {
+          const queryDay = queryParts[0].padStart(2, '0');
+          const queryMonth = queryParts[1].padStart(2, '0');
+          let queryYear = queryParts[2];
+          
+          // Handle 2-digit year
+          if (queryYear.length === 2) {
+            queryYear = `20${queryYear}`; // Assuming 21st century
+          }
+          
+          return day === queryDay && 
+                 month === queryMonth && 
+                 year === queryYear;
+        }
+        
+        return false;
+
       case 'bezahlt':
-        return (query.toLowerCase() === 'ja' && appointment.bezahlt) || (query.toLowerCase() === 'nein' && !appointment.bezahlt);
+        return (query.toLowerCase() === 'ja' && appointment.bezahlt) || 
+               (query.toLowerCase() === 'nein' && !appointment.bezahlt);
 
       case 'id':
         return String(appointment.id) === query;
@@ -246,7 +266,6 @@ const filteredAppointments = computed(() => {
     }
   });
 });
-
 
 const paginatedAppointments = computed(() => {
   const start = (currentPage.value - 1) * appointmentsPerPage;
@@ -290,7 +309,13 @@ const lastPage = () => {
     />
     <ul class="space-y-2">
       <li v-for="appointment in paginatedAppointments" :key="appointment.id" class="mb-2">
-        <AppointmentItem :appointment="appointment" actionType="delete" @appointmentDeleted="handleAppointmentDeleted" @appointmentUpdated="handleUpdateAppointment" @editAppointment="editAppointment" />
+        <AppointmentItem 
+          :appointment="appointment" 
+          actionType="delete" 
+          @appointmentDeleted="handleAppointmentDeleted" 
+          @appointmentUpdated="handleUpdateAppointment" 
+          @editAppointment="editAppointment" 
+        />
       </li>
     </ul>
     <Pagination
@@ -302,16 +327,25 @@ const lastPage = () => {
       @lastPage="lastPage"
     />
     <AddAppointmentOverlay
-        v-if="showOverlay"
-        :customers="customers"
-        :dogs="dogs"
-        @closeOverlay="showOverlay = false"
-        @addAppointment="addAppointment"
-        @rollbackAppointment="rollbackAppointment"
-        @show-toast="handleUploadSuccess"
-      />
-    <EditAppointmentOverlay v-if="showEditOverlay" :appointment="selectedAppointment" @closeOverlay="showEditOverlay = false" @updateAppointment="handleUpdateAppointment" />
-    <Toast v-if="showToast" :message="toastMessage" @close="closeToast" />
+      v-if="showOverlay"
+      :customers="customers"
+      :dogs="dogs"
+      @closeOverlay="showOverlay = false"
+      @addAppointment="addAppointment"
+      @rollbackAppointment="rollbackAppointment"
+      @show-toast="handleUploadSuccess"
+    />
+    <EditAppointmentOverlay 
+      v-if="showEditOverlay" 
+      :appointment="selectedAppointment" 
+      @closeOverlay="showEditOverlay = false" 
+      @updateAppointment="handleUpdateAppointment" 
+    />
+    <Toast 
+      v-if="showToast" 
+      :message="toastMessage" 
+      @close="closeToast" 
+    />
   </div>
 </template>
 

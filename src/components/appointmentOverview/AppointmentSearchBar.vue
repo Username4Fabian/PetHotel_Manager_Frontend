@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { computed } from 'vue';
 
 const props = defineProps({
   searchQuery: String,
@@ -13,29 +13,23 @@ const props = defineProps({
   },
 });
 
-const emits = defineEmits(['update:searchQuery', 'update:searchProperty', 'showOverlay', 'update:dateSearchType']);
-
-const dateSearchType = ref('datum'); // Default to 'datum'
+const emits = defineEmits(['update:searchQuery', 'update:searchProperty', 'showOverlay']);
 
 const clearSearch = () => {
   emits('update:searchQuery', '');
 };
 
-// Watch for changes in searchProperty and reset searchQuery
-watch(() => props.searchProperty, () => {
-  emits('update:searchQuery', '');
-});
-
-// Emit the dateSearchType when it changes
-watch(dateSearchType, (newValue) => {
-  emits('update:dateSearchType', newValue);
+const placeholderText = computed(() => {
+  if (props.searchProperty === 'date_ankunft' || props.searchProperty === 'date_abfahrt') {
+    return 'z.B. 17 (Tag) oder 03 (Monat) oder 2025 (Jahr) oder 17.03.2025';
+  }
+  return 'Termin suchen...';
 });
 </script>
 
 <template>
   <div class="flex items-center mb-4">
     <div class="relative w-full">
-      <!-- Show input or dropdown based on searchProperty -->
       <template v-if="searchProperty === 'bezahlt'">
         <select
           :value="searchQuery"
@@ -52,7 +46,7 @@ watch(dateSearchType, (newValue) => {
           :value="searchQuery"
           @input="$emit('update:searchQuery', $event.target.value)"
           type="text"
-          placeholder="Termin suchen..."
+          :placeholder="placeholderText"
           class="p-2 border border-gray-300 rounded w-full"
         />
         <button
@@ -65,20 +59,6 @@ watch(dateSearchType, (newValue) => {
       </template>
     </div>
 
-    <!-- New dropdown for date search type (only shown for Ankunft/Abfahrt) -->
-    <select
-      v-if="searchProperty === 'date_ankunft' || searchProperty === 'date_abfahrt'"
-      v-model="dateSearchType"
-      class="ml-2 p-2 border border-gray-300 rounded"
-      style="height: 40px; width: 120px;"
-    >
-      <option value="datum">Datum</option>
-      <option value="tag">Tag</option>
-      <option value="monat">Monat</option>
-      <option value="jahr">Jahr</option>
-    </select>
-
-    <!-- Existing dropdown for search property -->
     <select
       :value="searchProperty"
       @change="$emit('update:searchProperty', $event.target.value)"
@@ -92,7 +72,6 @@ watch(dateSearchType, (newValue) => {
       <option value="id">Terminnummer</option>
     </select>
 
-    <!-- Add appointment button -->
     <button
       v-if="showAddButton"
       @click="$emit('showOverlay')"
