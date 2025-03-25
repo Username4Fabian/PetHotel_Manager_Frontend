@@ -200,7 +200,7 @@ const lastPage = () => {
 
 <template>
   <div class="container mx-auto p-4">
-    <h1 class="text-2xl md:text-4xl font-bold mb-4">Hundeübersicht</h1>
+    <h1 class="text-xl md:text-4xl font-bold mb-4 text-center md:text-left">Hundeübersicht</h1>
     <DogSearchBar
       v-model:searchQuery="searchQuery"
       v-model:searchProperty="searchProperty"
@@ -209,7 +209,13 @@ const lastPage = () => {
     />
     <ul class="space-y-2">
       <li v-for="dog in paginatedDogs" :key="dog.id" class="mb-2">
-        <DogItem :dog="dog" actionType="delete" @dogDeleted="handleDogDeleted" @dogUpdated="handleUpdateDog" @editDog="editDog" />
+        <DogItem
+          :dog="dog"
+          actionType="delete"
+          @dogDeleted="handleDogDeleted"
+          @dogUpdated="handleUpdateDog"
+          @editDog="editDog"
+        />
       </li>
     </ul>
     <Pagination
@@ -220,14 +226,25 @@ const lastPage = () => {
       @firstPage="firstPage"
       @lastPage="lastPage"
     />
-    <AddDogOverlay v-if="showOverlay" :customers="customers" @closeOverlay="showOverlay = false" @addDog="addDog" @show-toast="handleUploadSuccess" />
-    <EditDogOverlay v-if="showEditOverlay" :dog="selectedDog" @closeOverlay="showEditOverlay = false" @updateDog="handleUpdateDog" />
+    <AddDogOverlay
+      v-if="showOverlay"
+      :customers="customers"
+      @closeOverlay="showOverlay = false"
+      @addDog="addDog"
+      @show-toast="handleUploadSuccess"
+    />
+    <EditDogOverlay
+      v-if="showEditOverlay"
+      :dog="selectedDog"
+      @closeOverlay="showEditOverlay = false"
+      @updateDog="handleUpdateDog"
+    />
     <Toast v-if="showToast" :message="toastMessage" @close="closeToast" />
   </div>
 </template>
 
 <style scoped>
 .container {
-  max-width: 1200px;
+  max-width: 100%;
 }
 </style>
