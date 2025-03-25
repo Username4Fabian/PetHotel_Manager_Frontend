@@ -186,7 +186,7 @@ const lastPage = () => {
 
 <template>
   <div class="container mx-auto p-4">
-    <h1 class="text-2xl md:text-4xl font-bold mb-4">Kundenübersicht</h1>
+    <h1 class="text-xl md:text-4xl font-bold mb-4 text-center md:text-left">Kundenübersicht</h1>
     <CustomerSearchBar
       v-model:searchQuery="searchQuery"
       v-model:searchProperty="searchProperty"
@@ -194,8 +194,19 @@ const lastPage = () => {
       @showOverlay="showOverlay = true"
     />
     <ul class="space-y-2">
-      <li v-for="customer in paginatedCustomers" :key="customer.id" class="mb-2">
-        <CustomerItem :customer="customer" :dogs="dogs" actionType="delete" @customerDeleted="handleCustomerDeleted" @customerUpdated="handleUpdateCustomer" @viewCustomerDogs="viewCustomerDogs" />
+      <li
+        v-for="customer in paginatedCustomers"
+        :key="customer.id"
+        class="mb-2"
+      >
+        <CustomerItem
+          :customer="customer"
+          :dogs="dogs"
+          actionType="delete"
+          @customerDeleted="handleCustomerDeleted"
+          @customerUpdated="handleUpdateCustomer"
+          @viewCustomerDogs="viewCustomerDogs"
+        />
       </li>
     </ul>
     <Pagination
@@ -206,8 +217,19 @@ const lastPage = () => {
       @firstPage="firstPage"
       @lastPage="lastPage"
     />
-    <AddCustomerOverlay v-if="showOverlay" @closeOverlay="showOverlay = false" @addCustomer="addCustomer" @show-toast="handleUploadSuccess" />
-    <EditCustomerOverlay v-if="showEditOverlay" :customer="selectedCustomer" @closeOverlay="showEditOverlay = false" @updateCustomer="handleUpdateCustomer" @show-toast="handleUploadSuccess" />
+    <AddCustomerOverlay
+      v-if="showOverlay"
+      @closeOverlay="showOverlay = false"
+      @addCustomer="addCustomer"
+      @show-toast="handleUploadSuccess"
+    />
+    <EditCustomerOverlay
+      v-if="showEditOverlay"
+      :customer="selectedCustomer"
+      @closeOverlay="showEditOverlay = false"
+      @updateCustomer="handleUpdateCustomer"
+      @show-toast="handleUploadSuccess"
+    />
     <Toast v-if="showToast" :message="toastMessage" @close="closeToast" />
   </div>
 </template>

@@ -21,28 +21,53 @@ const showLoadingMessage = ref(true);
 onMounted(() => {
   setTimeout(() => {
     showLoadingMessage.value = false;
-  }, 10000); // Hide the message after 10 seconds
+  }, 15000); // Hide the message after 10 seconds
 });
 </script>
 
 <template>
-  <div>
-    <div v-if="totalPages === 0" class="text-center text-gray-500 mb-4">
-      Keine Einträge gefunden (•́︵•̀)
-      <div v-if="showLoadingMessage" class="text-center text-gray-500 mb-4">
-        Mit etwas Glück laden sie gerade...
-      </div>
+  <div class="flex flex-wrap justify-between items-center mt-4 space-y-0">
+    <!-- First and Previous Buttons -->
+    <div class="flex space-x-2 items-center">
+      <!-- First Button -->
+      <button
+        @click="$emit('firstPage')"
+        :disabled="currentPage === 1 || totalPages <= 1"
+        class="px-4 py-2 bg-gray-800 text-white rounded disabled:opacity-50 cursor-pointer">
+        <i class="fas fa-angle-double-left"></i>
+      </button>
+
+      <!-- Previous Button -->
+      <button
+        @click="$emit('prevPage')"
+        :disabled="currentPage === 1 || totalPages <= 1"
+        class="px-4 py-2 bg-gray-800 text-white rounded disabled:opacity-50 cursor-pointer">
+        <i class="fas fa-angle-left"></i>
+      </button>
     </div>
-    <div class="flex flex-col md:flex-row justify-between items-center mt-4 space-y-4 md:space-y-0">
-      <div class="flex space-x-2">
-        <button @click="$emit('firstPage')" :disabled="currentPage === 1 || totalPages <= 1" class="px-4 py-2 bg-gray-800 text-white rounded disabled:opacity-50 hover:cursor-pointer hover:scale-102">Erste</button>
-        <button @click="$emit('prevPage')" :disabled="currentPage === 1 || totalPages <= 1" class="px-4 py-2 bg-gray-800 text-white rounded disabled:opacity-50 hover:cursor-pointer hover:scale-102">Vorherige</button>
-      </div>
-      <span class="text-center">Seite {{ displayPage }} von {{ displayTotalPages }}</span>
-      <div class="flex space-x-2">
-        <button @click="$emit('nextPage')" :disabled="currentPage === totalPages || totalPages <= 1" class="px-4 py-2 bg-gray-800 text-white rounded disabled:opacity-50 hover:cursor-pointer hover:scale-102">Nächste</button>
-        <button @click="$emit('lastPage')" :disabled="currentPage === totalPages || totalPages <= 1" class="px-4 py-2 bg-gray-800 text-white rounded disabled:opacity-50 hover:cursor-pointer hover:scale-102">Letzte</button>
-      </div>
+
+    <!-- Page Indicator -->
+    <span class="text-center text-sm md:text-base mx-6">
+      Seite {{ displayPage }} von {{ displayTotalPages }}
+    </span>
+
+    <!-- Next and Last Buttons -->
+    <div class="flex space-x-2 items-center">
+      <!-- Next Button -->
+      <button
+        @click="$emit('nextPage')"
+        :disabled="currentPage === totalPages || totalPages <= 1"
+        class="px-4 py-2 bg-gray-800 text-white rounded disabled:opacity-50 cursor-pointer">
+        <i class="fas fa-angle-right"></i>
+      </button>
+
+      <!-- Last Button -->
+      <button
+        @click="$emit('lastPage')"
+        :disabled="currentPage === totalPages || totalPages <= 1"
+        class="px-4 py-2 bg-gray-800 text-white rounded disabled:opacity-50 cursor-pointer">
+        <i class="fas fa-angle-double-right"></i>
+      </button>
     </div>
   </div>
 </template>
