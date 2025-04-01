@@ -8,7 +8,6 @@ const emit = defineEmits(['update:modelValue']);
 
 <template>
   <div>
-    <label class="block text-sm font-medium text-gray-500 mb-2">Bezahlstatus</label>
     <button
       type="button"
       @click="emit('update:modelValue', !modelValue)"

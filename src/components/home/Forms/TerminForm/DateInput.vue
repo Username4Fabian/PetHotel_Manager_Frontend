@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import flatpickr from 'flatpickr';
 import { German } from 'flatpickr/dist/l10n/de';
 import 'flatpickr/dist/flatpickr.min.css';
@@ -9,22 +9,39 @@ const props = defineProps({
   modelValue: String,
   placeholder: String,
   required: Boolean,
-  label: String, // Add label prop
+  label: String,
+  minDate: String,
+  maxDate: String,
 });
 
 const emit = defineEmits(['update:modelValue']);
 
 const dateInput = ref(null);
+let fpInstance = null;
 
 onMounted(() => {
-  flatpickr(dateInput.value, {
-    dateFormat: 'd-m-Y', // Day-Month-Year format
-    defaultDate: props.modelValue || new Date(), // Default to current date if not provided
-    locale: German, // Set German localization
+  fpInstance = flatpickr(dateInput.value, {
+    dateFormat: 'd-m-Y',
+    defaultDate: props.modelValue || new Date(),
+    locale: German,
+    minDate: props.minDate,
+    maxDate: props.maxDate,
     onChange: (selectedDates, dateStr) => {
       emit('update:modelValue', dateStr);
     },
   });
+});
+
+watch(() => props.minDate, (newVal) => {
+  if (fpInstance) {
+    fpInstance.set('minDate', newVal);
+  }
+});
+
+watch(() => props.maxDate, (newVal) => {
+  if (fpInstance) {
+    fpInstance.set('maxDate', newVal);
+  }
 });
 </script>
 
@@ -36,9 +53,13 @@ onMounted(() => {
       type="text"
       :placeholder="placeholder"
       :required="required"
-      class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+      class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 peer"
+      :class="$attrs.class" 
     />
-    <label class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 pointer-events-none">
+    <label
+      id="label-abfahrt"
+      class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 peer-placeholder-shown:top-3 peer-placeholder-shown:text-gray-400 peer-placeholder-shown:text-base peer-focus:top-2 peer-focus:text-sm peer-focus:text-blue-500"
+    >
       {{ label }}
     </label>
   </div>

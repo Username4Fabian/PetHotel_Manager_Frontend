@@ -31,9 +31,51 @@ const selectedCustomerDogs = ref([]);
 
 const emits = defineEmits(['show-toast', 'updateAppointment', 'addAppointment']);
 
-// Fetch initial data (customers and dogs)
+const validationErrors = ref({
+  dateError: '',
+  timeError: ''
+});
+
+const initialLoad = ref(true);
+
+const isSameDay = computed(() => {
+  if (!appointmentData.value.date_ankunft || !appointmentData.value.date_abfahrt) return false;
+  return appointmentData.value.date_ankunft === appointmentData.value.date_abfahrt;
+});
+
+const validateDates = () => {
+  if (initialLoad.value) return true; 
+
+  validationErrors.value.dateError = '';
+  validationErrors.value.timeError = '';
+
+  if (!appointmentData.value.date_ankunft || !appointmentData.value.date_abfahrt) return;
+
+  const [ankunftDay, ankunftMonth, ankunftYear] = appointmentData.value.date_ankunft.split('-');
+  const ankunftDate = new Date(`${ankunftYear}-${ankunftMonth}-${ankunftDay}`);
+  const [abfahrtDay, abfahrtMonth, abfahrtYear] = appointmentData.value.date_abfahrt.split('-');
+  const abfahrtDate = new Date(`${abfahrtYear}-${abfahrtMonth}-${abfahrtDay}`);
+
+  if (abfahrtDate < ankunftDate) {
+    validationErrors.value.dateError = 'Abfahrts-Datum darf nicht vor Ankunfts-Datum liegen';
+    return false;
+  }
+
+  if (isSameDay.value && appointmentData.value.time_ankunft && appointmentData.value.time_abfahrt) {
+    const ankunftTime = appointmentData.value.time_ankunft.replace(':00', '');
+    const abfahrtTime = appointmentData.value.time_abfahrt.replace(':00', '');
+
+    if (abfahrtTime <= ankunftTime) {
+      validationErrors.value.timeError = 'Abfahrts-Zeit muss nach Ankunfts-Zeit liegen';
+      return false;
+    }
+  }
+
+  return true;
+};
+
 const fetchInitialData = async () => {
-  const fetchInterval = 2 * 60 * 1000; // 2 minutes in milliseconds
+  const fetchInterval = 2 * 60 * 1000;
 
   const cachedCustomers = localStorage.getItem('customers');
   const lastFetchTimeCustomers = localStorage.getItem('customers_lastFetchTime');
@@ -64,51 +106,33 @@ onMounted(async () => {
   await fetchInitialData();
 
   if (props.initialAppointment) {
-    // Populate appointmentData with initial values
     appointmentData.value = {
       ...props.initialAppointment,
       date_ankunft: props.initialAppointment.date_ankunft.split('T')[0].split('-').reverse().join('-'),
       date_abfahrt: props.initialAppointment.date_abfahrt.split('T')[0].split('-').reverse().join('-'),
       time_ankunft: props.initialAppointment.time_ankunft,
-      time_abfahrt: props.initialAppointment.time_abfahrt,
-      kunde: props.initialAppointment.kunde, // Ensure the kunde object is set
-      kundeId: props.initialAppointment.kundeId, // Ensure the kundeId is set
-      dogIds: props.initialAppointment.dogs.map(dog => dog.id) || [], // Derive dogIds from dogs array
+      time_abfahrt: props.initialAppointment.time_abfahrt || '17:00:00',
+      kunde: props.initialAppointment.kunde,
+      kundeId: props.initialAppointment.kundeId,
+      dogIds: props.initialAppointment.dogs.map(dog => dog.id) || [],
     };
-
-    // Set the initial customer if available
-    if (props.initialAppointment.kundeId) {
-      const initialCustomer = customers.value.find(customer => customer.id === props.initialAppointment.kundeId);
-      if (initialCustomer) {
-        appointmentData.value.kundeId = initialCustomer.id;
-      }
-    }
-
-    // Populate selectedCustomerDogs
-    if (props.initialAppointment.kundeId) {
-      selectedCustomerDogs.value = dogs.value.filter(dog => dog.downer.id === props.initialAppointment.kundeId);
-    }
   } else {
-    // Set default date to today in DD-MM-YYYY format
     const today = new Date();
     const day = String(today.getDate()).padStart(2, '0');
-    const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+    const month = String(today.getMonth() + 1).padStart(2, '0'); 
     const year = today.getFullYear();
     appointmentData.value.date_ankunft = `${day}-${month}-${year}`;
-    appointmentData.value.date_abfahrt = `${day}-${month}-${year}`;
-
-    // Set default time to 09:00 and 17:00
+    appointmentData.value.date_abfahrt = '';
     appointmentData.value.time_ankunft = '09:00:00';
-    appointmentData.value.time_abfahrt = '17:00:00';
+    appointmentData.value.time_abfahrt = '17:00:00'; 
   }
 
-  // Ensure selectedCustomerDogs is populated correctly
   if (appointmentData.value.kundeId) {
     selectedCustomerDogs.value = dogs.value.filter(dog => dog.downer.id === appointmentData.value.kundeId);
   }
+  initialLoad.value = false;
 });
 
-// Watch for customer selection to filter dogs
 watch(() => appointmentData.value.kundeId, (newCustomerId) => {
   if (newCustomerId) {
     selectedCustomerDogs.value = dogs.value.filter(dog => dog.downer.id === newCustomerId);
@@ -118,8 +142,28 @@ watch(() => appointmentData.value.kundeId, (newCustomerId) => {
   }
 });
 
+watch(() => [
+  appointmentData.value.date_ankunft,
+  appointmentData.value.date_abfahrt,
+  appointmentData.value.time_ankunft,
+  appointmentData.value.time_abfahrt
+], () => {
+  validateDates();
+}, { deep: true });
+
+watch(() => appointmentData.value.date_abfahrt, (newDateAbfahrt) => {
+  if (!newDateAbfahrt) {
+    appointmentData.value.time_abfahrt = '';
+  } else if (!appointmentData.value.time_abfahrt) {
+    appointmentData.value.time_abfahrt = '17:00:00';
+  }
+});
+
 const handleSubmit = async () => {
-  // Convert DD-MM-YYYY to YYYY-MM-DD for the backend
+  if (!validateDates()) {
+    return; 
+  }
+
   const [ankunftDay, ankunftMonth, ankunftYear] = appointmentData.value.date_ankunft.split('-');
   const [abfahrtDay, abfahrtMonth, abfahrtYear] = appointmentData.value.date_abfahrt.split('-');
 
@@ -131,10 +175,8 @@ const handleSubmit = async () => {
   };
 
   if (props.initialAppointment) {
-    // Emit update event for editing
     emits('updateAppointment', formattedAppointmentData);
   } else {
-    // Emit add event for new appointment
     emits('addAppointment', formattedAppointmentData);
   }
 
@@ -147,7 +189,6 @@ const handleSubmit = async () => {
     );
     console.log('Appointment saved:', response.data);
 
-    // Optionally update the appointment with the backend response (e.g., ID)
     emits('updateAppointment', response.data);
   } catch (error) {
     console.error('Error saving appointment:', error);
@@ -155,10 +196,9 @@ const handleSubmit = async () => {
   }
 };
 
-// Handle customer selection
 const handleCustomerSelect = (customer) => {
-  appointmentData.value.kundeId = customer.id; // Set the kundeId
-  appointmentData.value.kunde = customer; // Optionally set the kunde object
+  appointmentData.value.kundeId = customer.id; 
+  appointmentData.value.kunde = customer;
 };
 </script>
 
@@ -167,14 +207,52 @@ const handleCustomerSelect = (customer) => {
     <form @submit.prevent="handleSubmit" class="space-y-4">
       <!-- Ankunft Section -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <DateInput v-model="appointmentData.date_ankunft" placeholder="TT-MM-JJJJ" label="Ankunfts-Datum" required />
-        <TimeInput v-model="appointmentData.time_ankunft" placeholder="HH:mm" required />
+        <div>
+          <DateInput 
+            v-model="appointmentData.date_ankunft" 
+            placeholder="TT-MM-JJJJ" 
+            label="Ankunfts-Datum" 
+            required 
+            :max-date="!initialLoad ? appointmentData.date_abfahrt : null"
+            :class="{ 'border-red-500': validationErrors.dateError }"
+          />
+        </div>
+        <div>
+          <TimeInput 
+            v-model="appointmentData.time_ankunft" 
+            placeholder="HH:mm" 
+            required 
+            :max-time="!initialLoad && isSameDay ? appointmentData.time_abfahrt : null"
+            :class="{ 'border-red-500': validationErrors.timeError }"
+          />
+        </div>
       </div>
 
       <!-- Abfahrt Section -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <DateInput v-model="appointmentData.date_abfahrt" placeholder="TT-MM-JJJJ" label="Abfahrts-Datum"/>
-        <TimeInput v-model="appointmentData.time_abfahrt" placeholder="HH:mm" />
+        <div>
+          <DateInput 
+            v-model="appointmentData.date_abfahrt" 
+            placeholder="TT-MM-JJJJ" 
+            label="Abfahrts-Datum"
+            :min-date="!initialLoad ? appointmentData.date_ankunft : null"
+            :class="{ 'border-red-500': validationErrors.dateError }"
+          />
+          <p v-if="validationErrors.dateError" class="text-red-500 text-sm mt-1">
+            {{ validationErrors.dateError }}
+          </p>
+        </div>
+        <div>
+          <TimeInput 
+            v-model="appointmentData.time_abfahrt" 
+            placeholder="HH:mm" 
+            :min-time="!initialLoad && isSameDay ? appointmentData.time_ankunft : null"
+            :class="{ 'border-red-500': validationErrors.timeError }"
+          />
+          <p v-if="validationErrors.timeError" class="text-red-500 text-sm mt-1">
+            {{ validationErrors.timeError }}
+          </p>
+        </div>
       </div>
 
       <!-- Customer Search -->
