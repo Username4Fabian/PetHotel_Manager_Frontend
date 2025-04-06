@@ -4,29 +4,16 @@ import TerminForm from '@/components/home/Forms/TerminForm.vue';
 import KundenForm from '@/components/home/Forms/KundenForm.vue';
 import HundForm from '@/components/home/Forms/HundForm.vue';
 import Toast from '@/components/Toast.vue';
-import { fetchCustomers, fetchDogs } from '@/services/dataService';
 
 const showForm = ref(false);
 const formType = ref('');
 const backgroundImageUrl = ref('https://tierhotelmanager.b-cdn.net/tierhotel-manager/Page_Images/MainBg-2.svg');
-const customers = ref([]);
-const dogs = ref([]);
-const isFetchingCustomers = ref(false);
-const isFetchingDogs = ref(false);
-const fetchInterval = 2 * 60 * 1000; // 2 minutes in milliseconds
-
 const showToast = ref(false);
 const toastMessage = ref('');
 
-const handleButtonClick = async (type) => {
+const handleButtonClick = (type) => {
   formType.value = type;
   showForm.value = true;
-
-  if (type === 'kunden') {
-    customers.value = await fetchCustomers();
-  } else if (type === 'hund') {
-    dogs.value = await fetchDogs();
-  }
 };
 
 const closeForm = () => {
@@ -42,28 +29,38 @@ const closeToast = () => {
   showToast.value = false;
 };
 
-const fetchAndCacheImage = async () => {
-  try {
-    const imageUrl = 'https://tierhotelmanager.b-cdn.net/tierhotel-manager/Page_Images/MainBg-2.svg';
-    const response = await fetch(imageUrl);
-    if (response.ok) {
-      backgroundImageUrl.value = imageUrl;
-    } else {
-      console.error('Failed to fetch background image:', response.statusText);
-    }
-  } catch (error) {
-    console.error('Error fetching background image:', error);
-  }
-};
+const addAppointment = (newAppointment) => {
+  console.log('Appointment added:', newAppointment);
 
-const addDog = (newDog) => {
-  dogs.value.push(newDog);
-  handleSuccess('Hund erfolgreich hinzugefügt!');
-  closeForm(); // Close the form after adding the dog
+  // Retrieve all dogs from localStorage
+  const allDogs = JSON.parse(localStorage.getItem('dogs')) || [];
+
+  // Populate the dogs array based on dogIds
+  newAppointment.dogs = allDogs.filter(dog => newAppointment.dogIds?.includes(dog.id)) || [];
+
+  // Retrieve existing appointments from localStorage
+  const existingAppointments = JSON.parse(localStorage.getItem('appointments')) || [];
+
+  // Add the new appointment to the list
+  existingAppointments.push(newAppointment);
+
+  // Save the updated list back to localStorage
+  localStorage.setItem('appointments', JSON.stringify(existingAppointments));
+
+  handleSuccess('Termin erfolgreich hinzugefügt!');
+  closeForm(); // Close the form after adding the appointment
 };
 
 onMounted(async () => {
-  await fetchAndCacheImage();
+  // Preload background image
+  try {
+    const response = await fetch(backgroundImageUrl.value);
+    if (!response.ok) {
+      console.error('Failed to preload background image:', response.statusText);
+    }
+  } catch (error) {
+    console.error('Error preloading background image:', error);
+  }
 });
 </script>
 
@@ -95,7 +92,12 @@ onMounted(async () => {
           <h2 class="text-xl font-bold mb-4">
             {{ formType === 'termin' ? 'Neuen Termin anlegen' : formType === 'hund' ? 'Neuen Hund anlegen' : 'Neuen Kunden anlegen' }}
           </h2>
-          <component :is="formType === 'termin' ? TerminForm : formType === 'hund' ? HundForm : KundenForm" @addDog="addDog" @show-toast="handleSuccess" @closeOverlay="closeForm" />
+          <component 
+            :is="formType === 'termin' ? TerminForm : formType === 'hund' ? HundForm : KundenForm" 
+            @addAppointment="addAppointment" 
+            @show-toast="handleSuccess" 
+            @closeOverlay="closeForm" 
+          />
         </div>
       </div>
     </div>

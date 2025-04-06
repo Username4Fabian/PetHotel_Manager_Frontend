@@ -80,7 +80,7 @@ const formatTime = (timeString) => {
       <div class="flex space-x-4 mt-4 md:mt-0 justify-end w-full md:w-auto">
         <button
           @click.stop="emits('editAppointment', appointment)"
-          class="text-gray-500 hover:text-red-600 transition-colors duration-200 text-3xl md:text-3xl hover:cursor-pointer p-2 rounded-full">
+          class="text-gray-500 hover:text-blue-600 transition-colors duration-200 text-3xl md:text-3xl hover:cursor-pointer p-2 rounded-full">
           <i class="fas fa-edit"></i>
         </button>
         <button

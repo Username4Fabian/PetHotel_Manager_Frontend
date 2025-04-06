@@ -34,30 +34,31 @@ const updateAppointment = async (updatedAppointment) => {
   const index = appointments.findIndex(a => a.id === updatedAppointment.id);
   if (index !== -1) {
     appointments[index] = { ...localAppointment.value };
-  } else {
-    appointments.push(localAppointment.value);
   }
   localStorage.setItem('appointments', JSON.stringify(appointments));
-
   emits('updateAppointment', localAppointment.value);
   closeOverlay();
 
   try {
     const response = await axios.post('/api/appointment/updateAppointment', updatedAppointment);
-    localAppointment.value = { ...response.data }; // Update localAppointment with the response data
+
+    localAppointment.value = { ...response.data };
+    appointments[index] = { ...response.data };
+    localStorage.setItem('appointments', JSON.stringify(appointments));
+
     emits('updateAppointment', response.data);
     emits('show-toast', 'Termin erfolgreich aktualisiert!');
   } catch (error) {
     console.error('Error updating appointment:', error);
-    emits('show-toast', 'Fehler beim Aktualisieren des Termins!');
+
     localAppointment.value = { ...originalAppointment };
-    const appointments = JSON.parse(localStorage.getItem('appointments')) || [];
-    const index = appointments.findIndex(a => a.id === originalAppointment.id);
     if (index !== -1) {
       appointments[index] = { ...originalAppointment };
     }
     localStorage.setItem('appointments', JSON.stringify(appointments));
+
     emits('updateAppointment', originalAppointment);
+    emits('show-toast', 'Fehler beim Aktualisieren des Termins!');
   }
 };
 </script>
