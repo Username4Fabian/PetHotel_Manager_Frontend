@@ -147,6 +147,12 @@ const filteredCustomers = computed(() => {
       );
     } else if (searchProperty.value === 'id') {
       return String(customer.id) === searchQuery.value;
+    } else if (searchProperty.value === 'dogName') {
+      // Check if any of the dogs match the search query and belong to the customer
+      return dogs.value.some(dog =>
+        dog.downer.id === customer.id &&
+        dog.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+      );
     } else {
       return String(customer[searchProperty.value]).toLowerCase().includes(searchQuery.value.toLowerCase());
     }

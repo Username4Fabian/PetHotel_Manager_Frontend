@@ -46,6 +46,7 @@ const clearSearch = () => {
       <option value="firstName">Vorname</option>
       <option value="lastName">Nachname</option>
       <option value="id">Kundennummer</option>
+      <option value="dogName">Hundename</option> 
     </select>
     <button
       v-if="showAddButton"
