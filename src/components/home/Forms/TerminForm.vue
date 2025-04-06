@@ -136,6 +136,7 @@ onMounted(async () => {
 watch(() => appointmentData.value.kundeId, (newCustomerId) => {
   if (newCustomerId) {
     selectedCustomerDogs.value = dogs.value.filter(dog => dog.downer.id === newCustomerId);
+    appointmentData.value.dogIds = selectedCustomerDogs.value.map(dog => dog.id);
   } else {
     selectedCustomerDogs.value = [];
     appointmentData.value.dogIds = [];
