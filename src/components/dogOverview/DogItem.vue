@@ -79,10 +79,12 @@ const navigateToOwner = () => {
             <strong>Besitzer: </strong>
             <span
               @click.stop="navigateToOwner"
-              class="text-blue-900 hover:underline cursor-help"
-            >
+              class="text-blue-900 hover:underline cursor-help">
               {{ dog.downer?.firstName }} {{ dog.downer?.lastName }}
             </span>
+          </p>
+          <p class="text-sm text-gray-600">
+            <strong>Hundenummer: </strong> {{ dog.id }}
           </p>
         </div>
       </div>

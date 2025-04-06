@@ -155,12 +155,18 @@ const filteredDogs = computed(() => {
     if (searchProperty.value === 'all') {
       return (
         dog.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-        dog.rasse.toLowerCase().includes(searchQuery.value.toLowerCase())
+        dog.rasse.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+        dog.chipNr.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+        `${dog.downer.firstName} ${dog.downer.lastName}`.toLowerCase().includes(searchQuery.value.toLowerCase())
       );
     } else if (searchProperty.value === 'ownerId') {
       return String(dog.downer.id) === searchQuery.value;
     } else if (searchProperty.value === 'id') {
       return String(dog.id) === searchQuery.value;
+    } else if (searchProperty.value === 'ownerName') {
+      return `${dog.downer.firstName} ${dog.downer.lastName}`.toLowerCase().includes(searchQuery.value.toLowerCase());
+    } else if (searchProperty.value === 'chipNr') {
+      return dog.chipNr.toLowerCase().includes(searchQuery.value.toLowerCase());
     } else {
       return String(dog[searchProperty.value]).toLowerCase().includes(searchQuery.value.toLowerCase());
     }
