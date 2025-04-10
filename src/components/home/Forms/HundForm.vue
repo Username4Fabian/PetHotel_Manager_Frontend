@@ -102,6 +102,10 @@ const handleSubmit = async () => {
     return;
   }
 
+  if (!dogData.value.tierart) {
+    dogData.value.tierart = 'Hund';
+  }
+
   // Optimistic UI update
   const originalDogData = { ...dogData.value };
   let optimisticDogData = { ...dogData.value, id: props.isEdit ? dogData.value.id : Date.now() }; // Temporary ID for new dog

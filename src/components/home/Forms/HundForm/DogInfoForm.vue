@@ -27,7 +27,6 @@ const updateField = (key, value) => {
   emit('update:dogData', key, value);
 };
 
-
 // Handle breed updates from BreedSearch
 const handleBreedUpdate = (value) => {
   updateField('rasse', value); // Update the rasse field in dogData
