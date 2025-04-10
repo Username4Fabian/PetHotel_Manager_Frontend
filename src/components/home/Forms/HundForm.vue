@@ -17,6 +17,7 @@ const props = defineProps({
       chipNr: '',
       ownerId: null,
       geschlecht: '',
+      medikamente: '',
     }),
   },
   customers: Array,

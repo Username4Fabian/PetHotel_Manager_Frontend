@@ -27,6 +27,7 @@ const updateField = (key, value) => {
   emit('update:dogData', key, value);
 };
 
+
 // Handle breed updates from BreedSearch
 const handleBreedUpdate = (value) => {
   updateField('rasse', value); // Update the rasse field in dogData
@@ -133,6 +134,20 @@ const handleBreedUpdate = (value) => {
           class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 peer-placeholder-shown:top-3 peer-placeholder-shown:text-gray-400 peer-placeholder-shown:text-base peer-focus:top-2 peer-focus:text-sm peer-focus:text-blue-500"
         >
           Tierart
+        </label>
+      </div>
+      <!-- Medikamente Field -->
+      <div class="relative md:col-span-2">
+        <input
+          :value="dogData.medikamente"
+          @input="updateField('medikamente', $event.target.value)"
+          type="text"
+          class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 peer"
+        />
+        <label
+          class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 peer-placeholder-shown:top-3 peer-placeholder-shown:text-gray-400 peer-placeholder-shown:text-base peer-focus:top-2 peer-focus:text-sm peer-focus:text-blue-500"
+        >
+          Medikamente
         </label>
       </div>
     </div>
