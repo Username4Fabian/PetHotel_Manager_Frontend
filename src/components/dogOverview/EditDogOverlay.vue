@@ -55,7 +55,6 @@ const handleUploadSuccess = () => {
         :isEdit="true"
         :showOwnerField="false"
         @updateDog="updateDog"
-        @show-toast="handleUploadSuccess"
       />
     </div>
   </div>

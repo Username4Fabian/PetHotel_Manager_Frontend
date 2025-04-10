@@ -122,6 +122,7 @@ const navigateToOwner = () => {
       <p class="text-sm text-gray-600"><strong>Geschlecht: </strong> {{ dog.geschlecht || '---' }}</p>
       <p class="text-sm text-gray-600"><strong>Impfpass Nummer: </strong> {{ dog.passNr || '---' }}</p>
       <p class="text-sm text-gray-600"><strong>Chip Nummer: </strong> {{ dog.chipNr || '---' }}</p>
+      <p class="text-sm text-gray-600"><strong>Tierart:</strong> {{ dog.tierart || '---' }}</p> 
     </div>
 
     <!-- Image Modal -->

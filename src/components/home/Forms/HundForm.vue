@@ -199,7 +199,6 @@ const updateDogData = (key, value) => {
       <DogInfoForm
         :dogData="dogData"
         :customers="customers"
-        :dogs="dogs"
         :breeds="breeds"
         :showOwnerField="showOwnerField"
         @update:dogData="updateDogData"

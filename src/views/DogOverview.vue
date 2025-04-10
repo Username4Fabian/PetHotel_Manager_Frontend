@@ -210,6 +210,7 @@ const lastPage = () => {
     <DogSearchBar
       v-model:searchQuery="searchQuery"
       v-model:searchProperty="searchProperty"
+      :tierarten="['Hund', 'Katze', 'Käfigtier']" 
       :showAddButton="true"
       @showOverlay="showOverlay = true"
     />

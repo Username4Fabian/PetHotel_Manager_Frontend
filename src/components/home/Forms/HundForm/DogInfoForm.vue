@@ -117,15 +117,24 @@ const handleBreedUpdate = (value) => {
           @selectCustomer="(customer) => updateField('ownerId', customer.id)"
         />
       </div>
+
+      <!-- Tierart Field -->
+      <div class="relative md:col-span-2">
+        <select
+          :value="dogData.tierart || 'Hund'"
+          @change="updateField('tierart', $event.target.value)"
+          class="w-full px-3 py-2 border rounded cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 peer"
+        >
+          <option value="Hund">Hund</option>
+          <option value="Katze">Katze</option>
+          <option value="Käfigtier">Käfigtier</option>
+        </select>
+        <label
+          class="absolute left-3 top-2 text-sm text-gray-500 transition-all duration-200 peer-placeholder-shown:top-3 peer-placeholder-shown:text-gray-400 peer-placeholder-shown:text-base peer-focus:top-2 peer-focus:text-sm peer-focus:text-blue-500"
+        >
+          Tierart
+        </label>
+      </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-/* Add responsive styles for better spacing on mobile */
-@media (max-width: 768px) {
-  .grid {
-    gap: 1rem;
-  }
-}
-</style>
