@@ -175,12 +175,6 @@ const handleSubmit = async () => {
     dogIds: [...appointmentData.value.dogIds],
   };
 
-  if (props.initialAppointment) {
-    emits('updateAppointment', formattedAppointmentData);
-  } else {
-    emits('addAppointment', formattedAppointmentData);
-  }
-
   try {
     const response = await axios.post(
       props.initialAppointment
@@ -190,7 +184,8 @@ const handleSubmit = async () => {
     );
     console.log('Appointment saved:', response.data);
 
-    emits('updateAppointment', response.data);
+    emits('addAppointment', response.data);
+
   } catch (error) {
     console.error('Error saving appointment:', error);
     emits('show-toast', 'Fehler beim Speichern des Termins!');

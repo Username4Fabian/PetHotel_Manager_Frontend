@@ -102,7 +102,7 @@ const rollbackAppointment = (failedAppointment) => {
 
 const handleAppointmentDeleted = async (deletedAppointment) => {
   const originalAppointments = [...appointments.value];
-  appointments.value = appointments.value.filter(a => a.id !== deletedAppointment.id);
+  appointments.value = appointments.value.filter(a => a.appointment_nr !== deletedAppointment.appointment_nr);
   localStorage.setItem('appointments', JSON.stringify(appointments.value));
   toastMessage.value = 'Appointment successfully deleted!';
   showToast.value = true;
@@ -114,7 +114,7 @@ const handleAppointmentDeleted = async (deletedAppointment) => {
   }
 
   try {
-    await axios.delete(`/api/appointment/DeleteAppointment/${deletedAppointment.id}`);
+    await axios.delete(`/api/appointment/DeleteAppointment/${deletedAppointment.appointment_nr}`);
   } catch (error) {
     console.error('Error deleting appointment:', error);
     appointments.value = originalAppointments;
@@ -139,8 +139,11 @@ const handleUpdateAppointment = (updatedAppointment) => {
   showEditOverlay.value = false;
 };
 
-const handleCloseOverlay = () => {
-  showEditOverlay.value = false;
+const handleCloseOverlay = async (shouldRefresh = false) => {
+  showOverlay.value = false;
+  if (shouldRefresh) {
+    await fetchAppointmentsData(); 
+  }
 };
 
 const handleUploadSuccess = (message) => {
@@ -336,14 +339,15 @@ const lastPage = () => {
       @lastPage="lastPage"
     />
     <AddAppointmentOverlay
-      v-if="showOverlay"
-      :customers="customers"
-      :dogs="dogs"
-      @closeOverlay="showOverlay = false"
-      @addAppointment="addAppointment"
-      @rollbackAppointment="rollbackAppointment"
-      @show-toast="handleUploadSuccess"
-    />
+        v-if="showOverlay"
+        :customers="customers"
+        :dogs="dogs"
+        @closeOverlay="showOverlay = false"
+        @closeAssignRooms="fetchAppointmentsData" 
+        @addAppointment="addAppointment"
+        @rollbackAppointment="rollbackAppointment"
+        @show-toast="handleUploadSuccess"
+      />
     <EditAppointmentOverlay
       v-if="showEditOverlay"
       :appointment="selectedAppointment"
