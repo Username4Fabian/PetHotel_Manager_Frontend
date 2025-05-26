@@ -1,59 +1,92 @@
 <script setup>
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 import TerminForm from '@/components/home/Forms/TerminForm.vue';
 import AssignRoomsOverlay from '@/components/rooms/AssignRoomsOverlay.vue';
-import axios from 'axios';
+import Toast from '@/components/Toast.vue';
+
+const router = useRouter();
 
 const props = defineProps({
   customers: {
     type: Array,
     required: true,
+    default: () => []
   },
   dogs: {
     type: Array,
     required: true,
-  },
+    default: () => []
+  }
 });
 
-const emits = defineEmits(['closeOverlay', 'addAppointment', 'show-toast', 'closeAssignRooms']);
+const handleRoomsAssigned = (message) => {
+  showAssignRoomsOverlay.value = false;
+  emit('show-toast', message); // Emit the toast message to the parent
+};
 
+const emit = defineEmits(['closeOverlay', 'addAppointment', 'closeAssignRooms']);
+
+// Toast state
+const toastMessage = ref('');
+const toastType = ref('success');
+const showToast = ref(false);
+
+// State
 const showOverlay = ref(true);
 const showAssignRoomsOverlay = ref(false);
 const newAppointment = ref(null);
+const isLoading = ref(false);
 
+// Methods
 const closeOverlay = () => {
   showOverlay.value = false;
-  emits('closeOverlay');
+  emit('closeOverlay');
 };
 
-const handleAppointmentCreated = (appointment) => {
-  console.log('New appointment created:', appointment);
-  newAppointment.value = appointment;
-  emits('addAppointment', appointment);
-  emits('show-toast', 'Termin erfolgreich erstellt!');
-  showOverlay.value = false;
-  showAssignRoomsOverlay.value = true;
+const handleAppointmentCreated = async (appointment) => {
+  try {
+    newAppointment.value = appointment;
+    emit('addAppointment', appointment);
+
+    toastMessage.value = 'Termin erfolgreich erstellt!';
+    toastType.value = 'success';
+    showToast.value = true;
+
+    showOverlay.value = false;
+    showAssignRoomsOverlay.value = true;
+  } catch (error) {
+    console.error('Error handling appointment creation:', error);
+    toastMessage.value = 'Fehler beim Erstellen des Termins';
+    toastType.value = 'error';
+    showToast.value = true;
+  }
 };
 
 const closeAssignRoomsOverlay = async (shouldRefresh = false) => {
   showAssignRoomsOverlay.value = false;
-  emits('closeOverlay');
+  emit('closeOverlay');
   if (shouldRefresh) {
-    emits('closeAssignRooms', true);
+    router.push({ name: 'appointment-over', query: { success: 'Termin erfolgreich erstellt!' } });
   }
 };
 
 const deleteAppointment = async (appointmentId) => {
+  isLoading.value = true;
   try {
     const response = await axios.delete(`/api/appointment/DeleteAppointment/${appointmentId}`);
     if (response.status === 200) {
-      console.log('Appointment deleted successfully:', response.data);
-      emits('show-toast', 'Termin wurde gelöscht.');
-    } else {
-      console.error('Failed to delete the appointment');
+      toastMessage.value = 'Termin wurde gelöscht.';
+      toastType.value = 'success';
+      showToast.value = true;
     }
   } catch (error) {
-    console.error('Error deleting the appointment:', error);
+    console.error('Error deleting appointment:', error);
+    toastMessage.value = 'Fehler beim Löschen des Termins';
+    toastType.value = 'error';
+    showToast.value = true;
+  } finally {
+    isLoading.value = false;
   }
 };
 </script>
@@ -61,25 +94,41 @@ const deleteAppointment = async (appointmentId) => {
 <template>
   <div>
     <!-- Add Appointment Overlay -->
-    <div
-      v-if="showOverlay"
-      class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50 p-4">
+    <transition
+      enter-active-class="transition duration-200 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition duration-150 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
       <div
-        class="relative w-full max-w-lg p-4 bg-white rounded shadow-lg max-h-full overflow-y-auto">
-        <button
-          @click="closeOverlay"
-          class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-4xl hover:cursor-pointer hover:scale-102">
-          &times;
-        </button>
-        <h2 class="text-lg md:text-xl font-bold mb-4 text-center">
-          Neuen Termin anlegen
-        </h2>
-        <TerminForm
-          :customers="customers"
-          :dogs="dogs"
-          @addAppointment="handleAppointmentCreated" />
+        v-if="showOverlay"
+        class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50 p-4"
+      >
+        <div class="relative w-full max-w-lg p-6 bg-white rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
+          <button
+            @click="closeOverlay"
+            class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors"
+            aria-label="Overlay schließen"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          
+          <h2 class="text-xl font-bold mb-6 text-center text-gray-800">
+            Neuen Termin anlegen
+          </h2>
+          
+          <TerminForm
+            :customers="customers"
+            :dogs="dogs"
+            @addAppointment="handleAppointmentCreated"
+          />
+        </div>
       </div>
-    </div>
+    </transition>
 
     <!-- Assign Rooms Overlay -->
     <AssignRoomsOverlay
@@ -87,6 +136,13 @@ const deleteAppointment = async (appointmentId) => {
       :appointment="newAppointment"
       @closeOverlay="closeAssignRoomsOverlay"
       @roomsAssigned="closeAssignRoomsOverlay"
+    />
+
+    <Toast
+      v-if="showToast"
+      :message="toastMessage"
+      :type="toastType"
+      @close="showToast = false"
     />
   </div>
 </template>

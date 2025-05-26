@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import AppointmentSearchBar from '@/components/appointmentOverview/AppointmentSearchBar.vue';
 import AppointmentItem from '@/components/appointmentOverview/AppointmentItem.vue';
 import Pagination from '@/components/customerOverview/Pagination.vue';
@@ -19,12 +19,14 @@ const currentPage = ref(1);
 const appointmentsPerPage = 10;
 const showOverlay = ref(false);
 const showEditOverlay = ref(false);
-const showToast = ref(false);
-const toastMessage = ref('');
 const selectedAppointment = ref(null);
 const fetchInterval = 3 * 60 * 1000; // 3 minutes in milliseconds
 
 const route = useRoute();
+const router = useRouter();
+
+const showToast = ref(false);
+const toastMessage = ref('');
 
 const fetchAppointmentsData = async () => {
   const now = Date.now();
@@ -83,7 +85,7 @@ const addAppointment = (newAppointment) => {
   newAppointment.dogs = allDogs.filter(dog => newAppointment.dogIds.includes(dog.id));
   appointments.value.push(newAppointment);
   localStorage.setItem('appointments', JSON.stringify(appointments.value));
-  toastMessage.value = 'Appointment successfully added!';
+  toastMessage.value = 'Termin erfolgreich erstellt!';
   showToast.value = true;
 
   // Adjust current page if the total number of pages changes
@@ -96,7 +98,7 @@ const addAppointment = (newAppointment) => {
 const rollbackAppointment = (failedAppointment) => {
   appointments.value = appointments.value.filter(a => a !== failedAppointment);
   localStorage.setItem('appointments', JSON.stringify(appointments.value));
-  toastMessage.value = 'Error creating appointment. Changes have been reverted.';
+  toastMessage.value = 'Error beim Erstellen des Termins! Bitte erneut versuchen.';
   showToast.value = true;
 };
 
@@ -104,7 +106,7 @@ const handleAppointmentDeleted = async (deletedAppointment) => {
   const originalAppointments = [...appointments.value];
   appointments.value = appointments.value.filter(a => a.appointment_nr !== deletedAppointment.appointment_nr);
   localStorage.setItem('appointments', JSON.stringify(appointments.value));
-  toastMessage.value = 'Appointment successfully deleted!';
+  toastMessage.value = 'Termin erfolgreich gelöscht!';
   showToast.value = true;
 
   // Adjust current page if the total number of pages changes
@@ -162,6 +164,13 @@ const editAppointment = (appointment) => {
 
 onMounted(() => {
   fetchAppointmentsData();
+
+  if (route.query.success) {
+    toastMessage.value = route.query.success;
+    showToast.value = true;
+
+    router.replace({ query: { ...route.query, success: undefined } });
+  }
 });
 
 // Reset to the first page when search query or property changes
