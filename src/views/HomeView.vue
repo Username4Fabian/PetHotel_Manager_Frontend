@@ -1,9 +1,10 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import TerminForm from '@/components/home/Forms/TerminForm.vue';
+import AddAppointmentOverlay from '@/components/appointmentOverview/AddAppointmentOverlay.vue';
 import KundenForm from '@/components/home/Forms/KundenForm.vue';
 import HundForm from '@/components/home/Forms/HundForm.vue';
 import Toast from '@/components/Toast.vue';
+import { fetchCustomers, fetchDogs } from '@/services/dataService';
 
 const showForm = ref(false);
 const formType = ref('');
@@ -11,13 +12,23 @@ const backgroundImageUrl = ref('https://tierhotelmanager.b-cdn.net/tierhotel-man
 const showToast = ref(false);
 const toastMessage = ref('');
 
+// Data for overlays
+const customers = ref([]);
+const dogs = ref([]);
+const showAddAppointmentOverlay = ref(false);
+
 const handleButtonClick = (type) => {
   formType.value = type;
   showForm.value = true;
+  if (type === 'termin') {
+    showAddAppointmentOverlay.value = true;
+    fetchInitialData();
+  }
 };
 
 const closeForm = () => {
   showForm.value = false;
+  showAddAppointmentOverlay.value = false;
 };
 
 const handleSuccess = (message) => {
@@ -29,26 +40,15 @@ const closeToast = () => {
   showToast.value = false;
 };
 
-const addAppointment = (newAppointment) => {
-  console.log('Appointment added:', newAppointment);
-
-  // Retrieve all dogs from localStorage
-  const allDogs = JSON.parse(localStorage.getItem('dogs')) || [];
-
-  // Populate the dogs array based on dogIds
-  newAppointment.dogs = allDogs.filter(dog => newAppointment.dogIds?.includes(dog.id)) || [];
-
-  // Retrieve existing appointments from localStorage
-  const existingAppointments = JSON.parse(localStorage.getItem('appointments')) || [];
-
-  // Add the new appointment to the list
-  existingAppointments.push(newAppointment);
-
-  // Save the updated list back to localStorage
-  localStorage.setItem('appointments', JSON.stringify(existingAppointments));
-
-  handleSuccess('Termin erfolgreich hinzugefügt!');
-  closeForm(); // Close the form after adding the appointment
+const fetchInitialData = async () => {
+  try {
+    customers.value = await fetchCustomers();
+    dogs.value = await fetchDogs();
+  } catch (error) {
+    console.error('Fehler beim Laden der Daten:', error);
+    toastMessage.value = 'Fehler beim Laden der Daten';
+    showToast.value = true;
+  }
 };
 
 onMounted(async () => {
@@ -84,17 +84,26 @@ onMounted(async () => {
         </button>
       </div>
 
-      <div v-if="showForm" class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50">
+      <!-- Overlay for new appointment (multi-step, with AssignRooms) -->
+      <AddAppointmentOverlay
+        v-if="showForm && formType === 'termin' && showAddAppointmentOverlay"
+        :customers="customers"
+        :dogs="dogs"
+        @closeOverlay="(msg) => { closeForm(); if(msg) handleSuccess(msg); }"
+        @show-toast="handleSuccess"
+      />
+
+      <!-- Overlay for new dog or customer -->
+      <div v-if="showForm && formType !== 'termin'" class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50">
         <div class="relative w-full max-w-lg p-4 bg-white rounded shadow-lg max-h-full overflow-y-auto">
           <button @click="closeForm" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-4xl hover:cursor-pointer hover:scale-102">
             &times;
           </button>
           <h2 class="text-xl font-bold mb-4">
-            {{ formType === 'termin' ? 'Neuen Termin anlegen' : formType === 'hund' ? 'Neuen Hund anlegen' : 'Neuen Kunden anlegen' }}
+            {{ formType === 'hund' ? 'Neuen Hund anlegen' : 'Neuen Kunden anlegen' }}
           </h2>
           <component 
-            :is="formType === 'termin' ? TerminForm : formType === 'hund' ? HundForm : KundenForm" 
-            @addAppointment="addAppointment" 
+            :is="formType === 'hund' ? HundForm : KundenForm" 
             @show-toast="handleSuccess" 
             @closeOverlay="closeForm" 
           />
