@@ -113,12 +113,11 @@ const closeOverlay = async (deleteAppointment = false) => {
     } catch (error) {
       console.error('Error deleting appointment:', error);
     }
+    emit('closeOverlay', { deleted: true });
+    return;
   }
-
-  // Emit a success message to the parent component
   emit('closeOverlay', 'Zimmer erfolgreich zugewiesen!');
 };
-
 const assignRooms = async () => {
   if (Object.keys(roomAssignments.value).length === 0) return;
 

@@ -65,7 +65,18 @@ const handleAppointmentCreated = async (appointment) => {
 
 const closeAssignRoomsOverlay = async (message) => {
   showAssignRoomsOverlay.value = false;
-  emit('closeOverlay', message); 
+  if (message && typeof message === 'object' && message.deleted && newAppointment.value) {
+    let appointments = JSON.parse(localStorage.getItem('appointments')) || [];
+    appointments = appointments.filter(
+      a => a.id !== newAppointment.value.id && a.appointment_nr !== newAppointment.value.appointment_nr
+    );
+    localStorage.setItem('appointments', JSON.stringify(appointments));
+    emit('removeAppointment', newAppointment.value);
+    emit('closeOverlay');
+    return;
+  }
+
+  emit('closeOverlay', message);
 };
 
 const deleteAppointment = async (appointmentId) => {

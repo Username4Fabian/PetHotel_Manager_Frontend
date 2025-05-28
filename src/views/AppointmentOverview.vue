@@ -298,6 +298,13 @@ const filteredAppointments = computed(() => {
   });
 });
 
+const removeAppointment = (appointment) => {
+  appointments.value = appointments.value.filter(
+    a => a.id !== appointment.id && a.appointment_nr !== appointment.appointment_nr
+  );
+  setCached('appointments', 'appointments_lastFetchTime', appointments.value);
+};
+
 const paginatedAppointments = computed(() => {
   const start = (currentPage.value - 1) * appointmentsPerPage;
   const end = start + appointmentsPerPage;
@@ -353,6 +360,7 @@ const lastPage = () => { currentPage.value = totalPages.value; };
       @addAppointment="addAppointment"
       @rollbackAppointment="rollbackAppointment"
       @show-toast="handleUploadSuccess"
+      @removeAppointment="removeAppointment"
     />
     <EditAppointmentOverlay
       v-if="showEditOverlay"
