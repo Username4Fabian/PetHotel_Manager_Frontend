@@ -63,12 +63,9 @@ const handleAppointmentCreated = async (appointment) => {
   }
 };
 
-const closeAssignRoomsOverlay = async (shouldRefresh = false) => {
+const closeAssignRoomsOverlay = async (message) => {
   showAssignRoomsOverlay.value = false;
-  emit('closeOverlay');
-  if (shouldRefresh) {
-    router.push({ name: 'appointment-over', query: { success: 'Termin erfolgreich erstellt!' } });
-  }
+  emit('closeOverlay', message); 
 };
 
 const deleteAppointment = async (appointmentId) => {

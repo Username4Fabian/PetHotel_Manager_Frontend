@@ -141,10 +141,14 @@ const handleUpdateAppointment = (updatedAppointment) => {
   showEditOverlay.value = false;
 };
 
-const handleCloseOverlay = async (shouldRefresh = false) => {
+const handleCloseOverlay = async (messageOrShouldRefresh = false) => {
   showOverlay.value = false;
-  if (shouldRefresh) {
-    await fetchAppointmentsData(); 
+  if (typeof messageOrShouldRefresh === 'string') {
+    toastMessage.value = messageOrShouldRefresh;
+    showToast.value = true;
+    await fetchAppointmentsData();
+  } else if (messageOrShouldRefresh === true) {
+    await fetchAppointmentsData();
   }
 };
 
@@ -348,15 +352,15 @@ const lastPage = () => {
       @lastPage="lastPage"
     />
     <AddAppointmentOverlay
-        v-if="showOverlay"
-        :customers="customers"
-        :dogs="dogs"
-        @closeOverlay="showOverlay = false"
-        @closeAssignRooms="fetchAppointmentsData" 
-        @addAppointment="addAppointment"
-        @rollbackAppointment="rollbackAppointment"
-        @show-toast="handleUploadSuccess"
-      />
+      v-if="showOverlay"
+      :customers="customers"
+      :dogs="dogs"
+      @closeOverlay="handleCloseOverlay"
+      @closeAssignRooms="fetchAppointmentsData" 
+      @addAppointment="addAppointment"
+      @rollbackAppointment="rollbackAppointment"
+      @show-toast="handleUploadSuccess"
+    />
     <EditAppointmentOverlay
       v-if="showEditOverlay"
       :appointment="selectedAppointment"
