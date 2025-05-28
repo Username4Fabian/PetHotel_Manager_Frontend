@@ -28,63 +28,76 @@ const router = useRouter();
 const showToast = ref(false);
 const toastMessage = ref('');
 
-const fetchAppointmentsData = async () => {
+// --- Helper: LocalStorage fetch/set ---
+const getCached = (key, lastKey) => {
   const now = Date.now();
+  const cached = localStorage.getItem(key);
+  const lastFetch = localStorage.getItem(lastKey);
+  if (cached && lastFetch && (now - lastFetch < fetchInterval)) {
+    return JSON.parse(cached);
+  }
+  return null;
+};
+const setCached = (key, lastKey, value) => {
+  localStorage.setItem(key, JSON.stringify(value));
+  localStorage.setItem(lastKey, Date.now().toString());
+};
 
-  // Fetch appointments with caching
-  const cachedAppointments = localStorage.getItem('appointments');
-  const lastFetchTimeAppointments = localStorage.getItem('appointments_lastFetchTime');
-  if (cachedAppointments && lastFetchTimeAppointments && (now - lastFetchTimeAppointments < fetchInterval)) {
-    appointments.value = JSON.parse(cachedAppointments);
+// --- Data Fetching with Caching ---
+const fetchAppointmentsData = async () => {
+  // Appointments
+  let cached = getCached('appointments', 'appointments_lastFetchTime');
+  if (cached) {
+    appointments.value = cached;
   } else {
     try {
-      const fetchedAppointments = await fetchAppointments();
-      appointments.value = fetchedAppointments;
-      localStorage.setItem('appointments', JSON.stringify(appointments.value));
-      localStorage.setItem('appointments_lastFetchTime', now.toString());
+      const fetched = await fetchAppointments();
+      appointments.value = fetched;
+      setCached('appointments', 'appointments_lastFetchTime', fetched);
     } catch (error) {
       console.error('Error fetching appointments:', error);
+      toastMessage.value = 'Fehler beim Laden der Termine!';
+      showToast.value = true;
     }
   }
-
-  // Fetch customers with caching
-  const cachedCustomers = localStorage.getItem('customers');
-  const lastFetchTimeCustomers = localStorage.getItem('customers_lastFetchTime');
-  if (cachedCustomers && lastFetchTimeCustomers && (now - lastFetchTimeCustomers < fetchInterval)) {
-    customers.value = JSON.parse(cachedCustomers);
+  // Customers
+  cached = getCached('customers', 'customers_lastFetchTime');
+  if (cached) {
+    customers.value = cached;
   } else {
     try {
-      const fetchedCustomers = await fetchCustomers();
-      customers.value = fetchedCustomers;
-      localStorage.setItem('customers', JSON.stringify(customers.value));
-      localStorage.setItem('customers_lastFetchTime', now.toString());
+      const fetched = await fetchCustomers();
+      customers.value = fetched;
+      setCached('customers', 'customers_lastFetchTime', fetched);
     } catch (error) {
       console.error('Error fetching customers:', error);
+      toastMessage.value = 'Fehler beim Laden der Kunden!';
+      showToast.value = true;
     }
   }
-
-  // Fetch dogs with caching
-  const cachedDogs = localStorage.getItem('dogs');
-  const lastFetchTimeDogs = localStorage.getItem('dogs_lastFetchTime');
-  if (cachedDogs && lastFetchTimeDogs && (now - lastFetchTimeDogs < fetchInterval)) {
-    dogs.value = JSON.parse(cachedDogs);
+  // Dogs
+  cached = getCached('dogs', 'dogs_lastFetchTime');
+  if (cached) {
+    dogs.value = cached;
   } else {
     try {
-      const fetchedDogs = await fetchDogs();
-      dogs.value = fetchedDogs;
-      localStorage.setItem('dogs', JSON.stringify(dogs.value));
-      localStorage.setItem('dogs_lastFetchTime', now.toString());
+      const fetched = await fetchDogs();
+      dogs.value = fetched;
+      setCached('dogs', 'dogs_lastFetchTime', fetched);
     } catch (error) {
       console.error('Error fetching dogs:', error);
+      toastMessage.value = 'Fehler beim Laden der Hunde!';
+      showToast.value = true;
     }
   }
 };
 
+// --- Appointment CRUD ---
 const addAppointment = (newAppointment) => {
-  const allDogs = JSON.parse(localStorage.getItem('dogs')) || [];
-  newAppointment.dogs = allDogs.filter(dog => newAppointment.dogIds.includes(dog.id));
+  // Use reactive dogs state, not localStorage
+  newAppointment.dogs = dogs.value.filter(dog => newAppointment.dogIds.includes(dog.id));
   appointments.value.push(newAppointment);
-  localStorage.setItem('appointments', JSON.stringify(appointments.value));
+  setCached('appointments', 'appointments_lastFetchTime', appointments.value);
   toastMessage.value = 'Termin erfolgreich erstellt!';
   showToast.value = true;
 
@@ -97,7 +110,7 @@ const addAppointment = (newAppointment) => {
 
 const rollbackAppointment = (failedAppointment) => {
   appointments.value = appointments.value.filter(a => a !== failedAppointment);
-  localStorage.setItem('appointments', JSON.stringify(appointments.value));
+  setCached('appointments', 'appointments_lastFetchTime', appointments.value);
   toastMessage.value = 'Error beim Erstellen des Termins! Bitte erneut versuchen.';
   showToast.value = true;
 };
@@ -105,7 +118,7 @@ const rollbackAppointment = (failedAppointment) => {
 const handleAppointmentDeleted = async (deletedAppointment) => {
   const originalAppointments = [...appointments.value];
   appointments.value = appointments.value.filter(a => a.appointment_nr !== deletedAppointment.appointment_nr);
-  localStorage.setItem('appointments', JSON.stringify(appointments.value));
+  setCached('appointments', 'appointments_lastFetchTime', appointments.value);
   toastMessage.value = 'Termin erfolgreich gelöscht!';
   showToast.value = true;
 
@@ -120,27 +133,33 @@ const handleAppointmentDeleted = async (deletedAppointment) => {
   } catch (error) {
     console.error('Error deleting appointment:', error);
     appointments.value = originalAppointments;
-    localStorage.setItem('appointments', JSON.stringify(appointments.value));
+    setCached('appointments', 'appointments_lastFetchTime', appointments.value);
     toastMessage.value = 'Error deleting appointment!';
     showToast.value = true;
   }
 };
 
 const handleUpdateAppointment = (updatedAppointment) => {
-  const index = appointments.value.findIndex(a => a.id === updatedAppointment.id);
-  if (index !== -1) {
-    appointments.value = [
-      ...appointments.value.slice(0, index),
-      updatedAppointment,
-      ...appointments.value.slice(index + 1)
-    ];
-    localStorage.setItem('appointments', JSON.stringify(appointments.value));
-    toastMessage.value = 'Appointment successfully updated!';
+  if (updatedAppointment) {
+    const index = appointments.value.findIndex(a => a.id === updatedAppointment.id);
+    if (index !== -1) {
+      appointments.value = [
+        ...appointments.value.slice(0, index),
+        updatedAppointment,
+        ...appointments.value.slice(index + 1)
+      ];
+      setCached('appointments', 'appointments_lastFetchTime', appointments.value);
+      toastMessage.value = 'Termin erfolgreich aktualisiert!';
+      showToast.value = true;
+    }
+  } else {
+    toastMessage.value = 'Fehler beim Aktualisieren des Termins!';
     showToast.value = true;
   }
   showEditOverlay.value = false;
 };
 
+// --- Overlay/Toast Handlers ---
 const handleCloseOverlay = async (messageOrShouldRefresh = false) => {
   showOverlay.value = false;
   if (typeof messageOrShouldRefresh === 'string') {
@@ -166,23 +185,22 @@ const editAppointment = (appointment) => {
   showEditOverlay.value = true;
 };
 
+// --- Lifecycle ---
 onMounted(() => {
   fetchAppointmentsData();
 
   if (route.query.success) {
     toastMessage.value = route.query.success;
     showToast.value = true;
-
     router.replace({ query: { ...route.query, success: undefined } });
   }
 });
 
-// Reset to the first page when search query or property changes
+// --- Watchers ---
 watch([searchQuery, searchProperty], () => {
   currentPage.value = 1;
 });
 
-// Handle route changes to pre-fill search query
 watch(route, () => {
   const ownerId = route.query.ownerId;
   if (ownerId) {
@@ -191,14 +209,13 @@ watch(route, () => {
   }
 }, { immediate: true });
 
+// --- Filtering & Pagination ---
 const filteredAppointments = computed(() => {
-  if (!searchQuery.value) {
-    return appointments.value;
-  }
+  if (!searchQuery.value) return appointments.value;
+
+  const query = searchQuery.value.trim().toLowerCase();
 
   return appointments.value.filter(appointment => {
-    const query = searchQuery.value.trim().toLowerCase();
-
     switch (searchProperty.value) {
       case 'customerName': {
         const firstName = appointment.kunde?.firstName?.toLowerCase() || '';
@@ -211,8 +228,8 @@ const filteredAppointments = computed(() => {
           fullName === query ||
           reverseName === query ||
           lastName === query ||
-          (queryParts.length > 1 && queryParts.every(part => 
-            firstName.includes(part) || 
+          (queryParts.length > 1 && queryParts.every(part =>
+            firstName.includes(part) ||
             lastName.includes(part))) ||
           (queryParts.length === 1 && (
             firstName.includes(query) ||
@@ -220,7 +237,6 @@ const filteredAppointments = computed(() => {
           ))
         );
       }
-
       case 'date_ankunft':
       case 'date_abfahrt': {
         const dateString = searchProperty.value === 'date_ankunft'
@@ -228,10 +244,7 @@ const filteredAppointments = computed(() => {
           : appointment.date_abfahrt;
 
         const appointmentDate = new Date(dateString);
-        if (isNaN(appointmentDate.getTime())) {
-          console.error('Invalid date:', dateString);
-          return false;
-        }
+        if (isNaN(appointmentDate.getTime())) return false;
 
         const day = String(appointmentDate.getUTCDate()).padStart(2, '0');
         const month = String(appointmentDate.getUTCMonth() + 1).padStart(2, '0');
@@ -260,32 +273,25 @@ const filteredAppointments = computed(() => {
           const queryDay = queryParts[0].padStart(2, '0');
           const queryMonth = queryParts[1].padStart(2, '0');
           let queryYear = queryParts[2];
-          if (queryYear.length === 2) {
-            queryYear = `20${queryYear}`;
-          }
+          if (queryYear.length === 2) queryYear = `20${queryYear}`;
           return day === queryDay && month === queryMonth && year === queryYear;
         }
 
         return false;
       }
-
       case 'dogName':
-        return appointment.dogs?.some(dog => 
+        return appointment.dogs?.some(dog =>
           dog.name.toLowerCase().includes(query)
         );
-
       case 'kundennummer':
-        return appointment.dogs?.some(dog => 
+        return appointment.dogs?.some(dog =>
           String(dog.downer?.id) === query
         );
-
       case 'id':
         return String(appointment.id) === query;
-
       case 'bezahlt':
-        return (query === 'ja' && appointment.bezahlt) || 
+        return (query === 'ja' && appointment.bezahlt) ||
                (query === 'nein' && !appointment.bezahlt);
-
       default:
         return false;
     }
@@ -298,29 +304,16 @@ const paginatedAppointments = computed(() => {
   return filteredAppointments.value.slice(start, end);
 });
 
-const totalPages = computed(() => {
-  return Math.ceil(filteredAppointments.value.length / appointmentsPerPage);
-});
+const totalPages = computed(() => Math.ceil(filteredAppointments.value.length / appointmentsPerPage));
 
 const nextPage = () => {
-  if (currentPage.value < totalPages.value) {
-    currentPage.value++;
-  }
+  if (currentPage.value < totalPages.value) currentPage.value++;
 };
-
 const prevPage = () => {
-  if (currentPage.value > 1) {
-    currentPage.value--;
-  }
+  if (currentPage.value > 1) currentPage.value--;
 };
-
-const firstPage = () => {
-  currentPage.value = 1;
-};
-
-const lastPage = () => {
-  currentPage.value = totalPages.value;
-};
+const firstPage = () => { currentPage.value = 1; };
+const lastPage = () => { currentPage.value = totalPages.value; };
 </script>
 
 <template>
@@ -356,7 +349,7 @@ const lastPage = () => {
       :customers="customers"
       :dogs="dogs"
       @closeOverlay="handleCloseOverlay"
-      @closeAssignRooms="fetchAppointmentsData" 
+      @closeAssignRooms="fetchAppointmentsData"
       @addAppointment="addAppointment"
       @rollbackAppointment="rollbackAppointment"
       @show-toast="handleUploadSuccess"
@@ -364,8 +357,11 @@ const lastPage = () => {
     <EditAppointmentOverlay
       v-if="showEditOverlay"
       :appointment="selectedAppointment"
+      :customers="customers"
+      :dogs="dogs"
       @closeOverlay="showEditOverlay = false"
       @updateAppointment="handleUpdateAppointment"
+      @show-toast="handleUploadSuccess"
     />
     <Toast v-if="showToast" :message="toastMessage" @close="closeToast" />
   </div>

@@ -118,11 +118,12 @@ const handleSubmit = async () => {
     );
 
     emit(props.initialAppointment ? 'updateAppointment' : 'addAppointment', response.data);
-    showToast.value = true;
-    toastMessage.value = props.initialAppointment 
-      ? 'Termin erfolgreich aktualisiert!' 
-      : 'Termin erfolgreich erstellt!';
-    toastType.value = 'success';
+
+    if (!props.initialAppointment) {
+      showToast.value = true;
+      toastMessage.value = 'Termin erfolgreich erstellt!';
+      toastType.value = 'success';
+    }
   } catch (error) {
     console.error('Error saving appointment:', error);
     showToast.value = true;
